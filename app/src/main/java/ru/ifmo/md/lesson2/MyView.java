@@ -10,12 +10,12 @@ import android.view.SurfaceView;
 
 public class MyView extends SurfaceView implements SurfaceHolder.Callback {
     private DrawerThread drawerThread;
+    public static final double squeezing = 1.73D;
     
     public MyView(Context context) {
         super(context);
         getHolder().addCallback(this);
     }
-
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
@@ -43,6 +43,98 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    private class Color {
+        private final int color;
+
+        private Color(int color) {
+            this.color = color;
+        }
+
+        private Color(char red, char green, char blue, char alpha) {
+            color = alpha * (1 << 24) + red * (1 << 16) + green * (1 << 8) + blue;
+        }
+
+        public int getRed() {
+            return (color >> 16) & 255;
+        }
+
+        public int getGreen() {
+            return (color >> 8) & 255;
+        }
+
+        public int getBlue() {
+            return color & 255;
+        }
+
+        public int getAlpha() {
+            return (color >> 24) & 255;
+        }
+
+        public int getColor() {
+            return color;
+        }
+    }
+
+    private class Image {
+        private final Color[] colors;
+        private final int[] simpleColors;
+        private final int width;
+        private final int height;
+
+        private Image(int[] colors, int width, int height) {
+            simpleColors = colors;
+            this.colors = new Color[colors.length];
+            for (int i = 0; i < colors.length; i++) {
+                this.colors[i] = new Color(colors[i]);
+            }
+            this.width = width;
+            this.height = height;
+            if (width * height != colors.length) {
+                throw new IllegalArgumentException("Height and width doesn't match to colors array");
+            }
+        }
+
+        public Color getColor(int x, int y) {
+            return colors[x * width + y];
+        }
+
+        public int getPixel(double u, double v) {
+            u = u * height - 0.5;
+            v = v * width - 0.5;
+            int x = (int) Math.floor(u);
+            int y = (int) Math.floor(v);
+            double u_ratio = u - x;
+            double v_ratio = v - y;
+            double u_opposite = 1 - u_ratio;
+            double v_opposite = 1 - v_ratio;
+            char red = (char) ((getColor(x, y).getRed()   * u_opposite  + getColor(x + 1, y).getRed()   * u_ratio) * v_opposite +
+                    (getColor(x, y + 1).getRed() * u_opposite  + getColor(x + 1, y + 1).getRed() * u_ratio) * v_ratio);
+            char green = (char) ((getColor(x, y).getGreen()   * u_opposite  + getColor(x + 1, y).getGreen()   * u_ratio) * v_opposite +
+                    (getColor(x, y + 1).getGreen() * u_opposite  + getColor(x + 1, y + 1).getGreen() * u_ratio) * v_ratio);
+            char blue = (char) ((getColor(x, y).getBlue()   * u_opposite  + getColor(x + 1, y).getBlue()   * u_ratio) * v_opposite +
+                    (getColor(x, y + 1).getBlue() * u_opposite  + getColor(x + 1, y + 1).getBlue() * u_ratio) * v_ratio);
+            char alpha = (char) ((getColor(x, y).getAlpha()   * u_opposite  + getColor(x + 1, y).getAlpha()   * u_ratio) * v_opposite +
+                    (getColor(x, y + 1).getAlpha() * u_opposite  + getColor(x + 1, y + 1).getAlpha() * u_ratio) * v_ratio);
+            return new Color(red, green, blue, alpha).getColor();
+        }
+
+        public Image convertTo(int newWidth, int newHeight) {
+            int[] colors = new int[newWidth * newHeight];
+            double pixelOffsetY = (1.0D / newWidth) / 2.0D;
+            double pixelOffsetX = (1.0D / newHeight) / 2.0D;
+            for (int i = 0; i < newHeight; i++) {
+                for (int j = 0; j < newWidth; j++) {
+                    colors[i * newWidth + j] = getPixel(pixelOffsetX + (i * 1.0D) / newHeight, pixelOffsetY + (j * 1.0D) / newWidth);
+                }
+            }
+            return new Image(colors, newWidth, newHeight);
+        }
+
+        public Bitmap convertToBitmap() {
+            return Bitmap.createBitmap(simpleColors, width, height, Bitmap.Config.RGB_565);
+        }
+    }
+
     private class DrawerThread extends Thread {
         private final int drawableId;
         private final SurfaceHolder holder;
@@ -54,8 +146,12 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
 
         @Override
         public void run() {
-            Bitmap bitmap = BitmapFactory.decodeResource(getContext().getResources(), drawableId);
-            Log.d("Drawing", bitmap.getWidth() + " " + bitmap.getHeight());
+            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), drawableId);
+            int[] colors = new int[bitmap.getWidth() * bitmap.getHeight()];
+            bitmap.getPixels(colors, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+            Image image = new Image(colors, bitmap.getWidth(), bitmap.getHeight());
+            Image convertedImage = image.convertTo((int) (bitmap.getWidth() / squeezing), (int) (bitmap.getHeight() / squeezing));
+            bitmap = convertedImage.convertToBitmap();
             Canvas canvas = null;
             try {
                 canvas = holder.lockCanvas(null);
