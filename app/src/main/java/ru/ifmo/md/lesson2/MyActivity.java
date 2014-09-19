@@ -12,16 +12,4 @@ public class MyActivity extends Activity {
         myView = new MyView(this);
         setContentView(myView);
     }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        myView.resume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        myView.pause();
-    }
 }
