@@ -21,7 +21,6 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
         Log.i("Drawing", "Surface created");
         drawerThread = new DrawerThread(R.drawable.source, getHolder());
-        drawerThread.setRunning(true);
         drawerThread.start();
     }
 
@@ -33,7 +32,6 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
         Log.d("Drawing", "Surface destroyed");
-        drawerThread.setRunning(false);
         boolean trying = true;
         while (trying) {
             try {
@@ -45,49 +43,28 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
-    public void resume() {
-        Log.d("Drawing", "Resume please");
-        if (drawerThread != null) {
-            drawerThread.setRunning(true);
-        }
-    }
-
-    public void pause() {
-        Log.d("Drawing", "Pause please");
-        if (drawerThread != null) {
-            drawerThread.setRunning(false);
-        }
-    }
-
     private class DrawerThread extends Thread {
         private final int drawableId;
         private final SurfaceHolder holder;
-        private boolean running = false;
 
         private DrawerThread(int drawableId, SurfaceHolder holder) {
             this.drawableId = drawableId;
             this.holder = holder;
         }
 
-        public void setRunning(boolean running) {
-            this.running = running;
-        }
-
         @Override
         public void run() {
             Bitmap bitmap = BitmapFactory.decodeResource(getContext().getResources(), drawableId);
             Log.d("Drawing", bitmap.getWidth() + " " + bitmap.getHeight());
-            while (running) {
-                Canvas canvas = null;
-                try {
-                    canvas = holder.lockCanvas(null);
-                    canvas.drawBitmap(bitmap, 0, 0, null);
-                } catch (NullPointerException ignore) {
+            Canvas canvas = null;
+            try {
+                canvas = holder.lockCanvas(null);
+                canvas.drawBitmap(bitmap, 0, 0, null);
+            } catch (NullPointerException ignore) {
 
-                } finally {
-                    if (canvas != null) {
-                        holder.unlockCanvasAndPost(canvas);
-                    }
+            } finally {
+                if (canvas != null) {
+                    holder.unlockCanvasAndPost(canvas);
                 }
             }
         }
