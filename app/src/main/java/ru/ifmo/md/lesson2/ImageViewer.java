@@ -34,4 +34,8 @@ public class ImageViewer extends SurfaceView implements SurfaceHolder.Callback {
             drawThread.join();
         } catch (InterruptedException ignore) {}
     }
+
+    public void changeCompress() {
+        drawThread.changeCompress();
+    }
 }
