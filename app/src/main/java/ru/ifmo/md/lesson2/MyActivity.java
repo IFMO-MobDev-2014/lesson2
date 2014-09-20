@@ -18,9 +18,20 @@ public class MyActivity extends Activity {
     private double[] sqrt;
     ImageView imageButton;
     protected boolean mode = true;
-
     private int [] colors;
     private int ww, hh;
+
+    @Override
+    public void onTrimMemory(int level) {
+        if (mode)
+            cachedFast = null;
+        else
+            cachedSlow = null;
+        if (level >= TRIM_MEMORY_RUNNING_CRITICAL) {
+            cachedFast = null;
+            cachedSlow = null;
+        }
+    }
 
     private int mixColor(int x, int y)
     {
@@ -41,19 +52,11 @@ public class MyActivity extends Activity {
     {
         int c1 = colors[x + y * ww];
 
-        int b = c1 & 255;
-        int g = (c1 >> 8) & 255;
-        int r = (c1 >> 16) & 255;
-
-        b = (int) (sqrt[b] * sqrt[255]);
-        g = (int) (sqrt[g] * sqrt[255]);
-        r = (int) (sqrt[r] * sqrt[255]);
-
         if (c == 0)
-            return b;
+            return (int) (sqrt[c1 & 255] * sqrt[255]);
         if (c == 1)
-            return g;
-        return r;
+            return (int) (sqrt[(c1 >> 8) & 255] * sqrt[255]);
+        return (int) (sqrt[(c1 >> 16) & 255] * sqrt[255]);
     }
 
     private void cacheFast()
@@ -68,10 +71,12 @@ public class MyActivity extends Activity {
             int[] fast_colors = new int[w * h];
             temp.getPixels(colors, 0, ww, 0, 0, ww, hh);
 
+            int x1, y1;
+
             for (int i = 0; i < w; i++)
                 for (int j = 0; j < h; j++) {
-                    int x1 = (int) ((ww - 1) * (double) j / (h - 1) + 0.5);
-                    int y1 = (int) ((hh - 1) * (1.0 - (double) i / (w - 1)) + 0.5);
+                    x1 = (int) ((ww - 1) * (float) j / (h - 1) + 0.5f);
+                    y1 = (int) ((hh - 1) * (1.0 - (float) i / (w - 1)) + 0.5f);
                         fast_colors[i + j * w] = mixColor(x1, y1);
                 }
 
@@ -95,27 +100,32 @@ public class MyActivity extends Activity {
             temp.getPixels(colors, 0, ww, 0, 0, ww, hh);
             cachedSlow = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
 
-            int [] rs = new int [w * h];
-            int [] gs = new int [w * h];
-            int [] bs = new int [w * h];
-            int [] count = new int [w * h];
+            short [] rs = new short [w * h];
+            short [] gs = new short [w * h];
+            short [] bs = new short [w * h];
+            byte [] count = new byte [w * h];
+
+            int x1, y1, c;
 
             for (int i = 0; i < ww; i++)
                 for (int j = 0; j < hh; j++) {
-                    int x1 = (int) ( (w - 1) * ( - (double) j / (hh - 1) + 1.0) + 0.5);
-                    int y1 = (int) ( (h - 1) * (double) i / (ww - 1) + 0.5);
-                    rs[x1 + y1 * w] += getColor(i, j, 2);
-                    gs[x1 + y1 * w] += getColor(i, j, 1);
-                    bs[x1 + y1 * w] += getColor(i, j, 0);
-                    count[x1 + y1 * w]++;
+                    x1 = (int) ( (w - 1) * ( - (float) j / (hh - 1) + 1.0f) + 0.5f);
+                    y1 = (int) ( (h - 1) * (float) i / (ww - 1) + 0.5f);
+                    c = x1 + y1 * w;
+                    rs[c] += getColor(i, j, 2);
+                    gs[c] += getColor(i, j, 1);
+                    bs[c] += getColor(i, j, 0);
+                    count[c]++;
                 }
+
+            colors = new int[w * h];
 
             for (int i = 0; i < w * h; i++)
             {
-                rs[i] = 0xff000000 | (bs[i] / count[i]) | ((gs[i] / count[i]) << 8) | ((rs[i] / count[i]) << 16);
+                colors[i] = (0xff000000 | (bs[i] / count[i]) | ((gs[i] / count[i]) << 8) | ((rs[i] / count[i]) << 16));
             }
 
-            cachedSlow = Bitmap.createBitmap(rs, w, h, Bitmap.Config.ARGB_8888);
+            cachedSlow = Bitmap.createBitmap(colors, w, h, Bitmap.Config.ARGB_8888);
 
             colors = null;
 
@@ -133,9 +143,8 @@ public class MyActivity extends Activity {
         }
 
         protected void onPostExecute(Integer result) {
-            if (result == 1)
-                if (mode)
-                    imageButton.setImageBitmap(cachedSlow);
+            if (mode)
+                imageButton.setImageBitmap(cachedSlow);
         }
     }
 
@@ -149,9 +158,8 @@ public class MyActivity extends Activity {
         }
 
         protected void onPostExecute(Integer result) {
-            if (result == 1)
-                if (!mode)
-                    imageButton.setImageBitmap(cachedFast);
+            if (!mode)
+                imageButton.setImageBitmap(cachedFast);
         }
     }
 
