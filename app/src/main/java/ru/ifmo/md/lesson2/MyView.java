@@ -144,7 +144,7 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
             int[] newColors = new int[height * width];
             for(int n = 0; n < height * width; n++) {
                 int i = n / height;
-                int j = n % height;
+                int j = height - 1 - n % height;
                 newColors[n] = colors[width * j + i].getColor();
             }
             return new Image(newColors, height, width);
