@@ -3,6 +3,9 @@ package ru.ifmo.md.lesson2;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.util.Log;
+
+import java.util.TreeSet;
 
 /**
  * Created by Женя on 21.09.2014.
@@ -24,7 +27,7 @@ public class BitmapHandler {
         newHeight = (int)Math.round(height * 1.0 / k);
         if (fastCompress)
             compress();
-        //turnAndIncreaseBrightness(30);
+        increaseBrightness(30);
         return Bitmap.createBitmap(colors, 0, width, width, height, Bitmap.Config.ARGB_8888);
     }
 
@@ -32,18 +35,6 @@ public class BitmapHandler {
 
     }
 
-    private static int increaseBrightness(int clr, int value) {
-        int A, R, G, B;
-        A = Color.alpha(clr);
-        B = Color.blue(clr);
-        G = Color.green(clr);
-        R = Color.red(clr);
-        A = Math.min(255, A + value);
-        B = Math.min(255, B + value);
-        R = Math.min(255, R + value);
-        G = Math.min(255, G + value);
-        return Color.argb(A, R, G, B);
-    }
     private static int sqr(int a) {
         return a * a;
     }
@@ -64,47 +55,60 @@ public class BitmapHandler {
     }
 
     private static void compress() {
-        for (;width > newWidth || height > newHeight;) {
-            for (int y = 0; width > newWidth && y < height; y++) {
-                int best = -1, bestDifference = -1;
-                for (int x = 1; x < width - 1; x++) {
-                    int len = (getLength(colors[y * width + x - 1], colors[y * width + x])) +
-                            (getLength(colors[y * width + x], colors[y * width + x + 1]));
-                    if (best == -1 || len < bestDifference) {
-                        best = x;
-                        bestDifference = len;
+        int cnt = width - newWidth;
+        {
+            TreeSet<Pair> set = new TreeSet<Pair>();
+            for (int y = 0; y < height; y++) {
+                set.clear();
+                for (int x = 0; x < width - 1; x++) {
+                    set.add(new Pair(getLength(colors[y * width + x + 1], colors[y * width + x]), x));
+                    if (set.size() > cnt)
+                        set.remove(set.last());
+                }
+                Pair tmp = new Pair(0, 0);
+                for (int x = 0, point = 0; x < width - 1; x++) {
+                    tmp.first = getLength(colors[y * width + x + 1], colors[y * width + x]);
+                    tmp.second = x;
+                    if (!set.contains(tmp)) {
+                        colors[y * width + point] = colors[y * width + x];
+                        point++;
                     }
                 }
-                for (int x = best; x < width - 1; x++)
-                    colors[y * width + x] = colors[y * width + x + 1];
             }
-            --width;
-            for (int x = 0; height > newHeight && x < width; x++) {
-                int best = -1, bestDifference = -1;
-                for (int y = 1; y < height - 1; y++) {
-                    int len = (getLength(colors[(y-1) * width + x], colors[y * width + x])) +
-                            (getLength(colors[y * width + x], colors[(y+1)* width + x]));
-                    if (best == -1 || len < bestDifference) {
-                        best = y;
-                        bestDifference = len;
+        }
+        cnt = height - newHeight;
+        {
+            TreeSet<Pair> set = new TreeSet<Pair>();
+            for (int x = 0; x < width; x++) {
+                set.clear();
+                for (int y = 0; y < height - 1; y++) {
+                    set.add(new Pair(getLength(colors[(y+1) * width + x], colors[y * width + x]), y));
+                    if (set.size() > cnt)
+                        set.remove(set.last());
+                }
+                Pair tmp = new Pair(0, 0);
+                for (int y = 0, point = 0; y < height - 1; y++) {
+                    tmp.first = getLength(colors[(y+1) * width + x], colors[y * width + x]);
+                    tmp.second = y;
+                    if (!set.contains(tmp)) {
+                        colors[point * width + x] = colors[y * width + x];
+                        point++;
                     }
                 }
-                for (int y = best; y < height - 1; y++)
-                    colors[y * width + x] = colors[(y+1) * width + x];
             }
-            height--;
         }
         int[] newColors = new int[newHeight * newWidth];
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                newColors[y * width + x] = colors[y * width + x];
+        for (int x = 0; x < newWidth; x++) {
+            for (int y = 0; y < newHeight; y++) {
+                newColors[y * newWidth + x] = colors[y * width + x];
             }
         }
         colors = newColors;
+        width = newWidth;
+        height = newHeight;
     }
 
-
-    private static void turnAndIncreaseBrightness(int value) {
+    private static void turn() {
         int[] turnColors;
         turnColors = new int[colors.length];
         for (int i = 0; i < colors.length; i++) {
@@ -112,13 +116,34 @@ public class BitmapHandler {
             int y = i / width;
             int nx = height - y - 1;
             int ny = x;
-            turnColors[ny * height + nx] = increaseBrightness(colors[i], value);
+            turnColors[ny * height + nx] = colors[i];
         }
         int t = width;
         width = height;
         height = t;
         colors = turnColors;
     }
+    private static void increaseBrightness(int value) {
+        for (int i = 0; i < colors.length; i++) {
+            int x = i % width;
+            int y = i / width;
+            colors[y * width + x] = increasePixelBrightness(colors[i], value);
+        }
+    }
+    private static int increasePixelBrightness(int clr, int value) {
+        int A, R, G, B;
+        A = Color.alpha(clr);
+        B = Color.blue(clr);
+        G = Color.green(clr);
+        R = Color.red(clr);
+        A = Math.min(255, A + value);
+        B = Math.min(255, B + value);
+        R = Math.min(255, R + value);
+        G = Math.min(255, G + value);
+        return Color.argb(A, R, G, B);
+    }
+
+
 
 
 }

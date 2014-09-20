@@ -61,7 +61,7 @@ public class ImagePrinter extends SurfaceView {
     public ImagePrinter(Context context) {
         super(context);
         image = BitmapFactory.decodeResource(getResources(), R.drawable.source);
-        image = BitmapHandler.processBitmap(image, false, 1.73);
+        image = BitmapHandler.processBitmap(image, true, 1.73);
         holder = getHolder();
     }
 
@@ -73,7 +73,7 @@ public class ImagePrinter extends SurfaceView {
     public void onDraw(Canvas canvas) {
         float scaleX = ((float)getWidth()) / image.getWidth();
         float scaleY = ((float)getHeight()) / image.getHeight();
-        canvas.scale(Math.min(scaleX, scaleY), Math.min(scaleX, scaleY));
+        //canvas.scale(Math.min(scaleX, scaleY), Math.min(scaleX, scaleY));
         canvas.drawBitmap(image, 0, 0, null);
     }
     public void resume() {
@@ -83,6 +83,7 @@ public class ImagePrinter extends SurfaceView {
         repaint();
     }
     public void pause() {
+        Log.i("WIDTH = " + image.getWidth() + "   ", "HEIGHT = " + image.getHeight());
         drawThread.setRunning(false);
         try {
             drawThread.join();
