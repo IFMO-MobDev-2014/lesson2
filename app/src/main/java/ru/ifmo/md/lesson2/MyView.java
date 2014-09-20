@@ -11,7 +11,7 @@ import android.view.SurfaceView;
 public class MyView extends SurfaceView implements SurfaceHolder.Callback {
     private DrawerThread drawerThread;
     public static final double squeezing = 1.73D;
-    
+
     public MyView(Context context) {
         super(context);
         getHolder().addCallback(this);
@@ -98,7 +98,7 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
             return colors[x * width + y];
         }
 
-        public int getPixel(double u, double v) {
+        public int getBilinearPixel(double u, double v) {
             u = u * height - 0.5;
             v = v * width - 0.5;
             int x = (int) Math.floor(u);
@@ -107,27 +107,47 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
             double v_ratio = v - y;
             double u_opposite = 1 - u_ratio;
             double v_opposite = 1 - v_ratio;
-            char red = (char) ((getColor(x, y).getRed()   * u_opposite  + getColor(x + 1, y).getRed()   * u_ratio) * v_opposite +
-                    (getColor(x, y + 1).getRed() * u_opposite  + getColor(x + 1, y + 1).getRed() * u_ratio) * v_ratio);
-            char green = (char) ((getColor(x, y).getGreen()   * u_opposite  + getColor(x + 1, y).getGreen()   * u_ratio) * v_opposite +
-                    (getColor(x, y + 1).getGreen() * u_opposite  + getColor(x + 1, y + 1).getGreen() * u_ratio) * v_ratio);
-            char blue = (char) ((getColor(x, y).getBlue()   * u_opposite  + getColor(x + 1, y).getBlue()   * u_ratio) * v_opposite +
-                    (getColor(x, y + 1).getBlue() * u_opposite  + getColor(x + 1, y + 1).getBlue() * u_ratio) * v_ratio);
-            char alpha = (char) ((getColor(x, y).getAlpha()   * u_opposite  + getColor(x + 1, y).getAlpha()   * u_ratio) * v_opposite +
-                    (getColor(x, y + 1).getAlpha() * u_opposite  + getColor(x + 1, y + 1).getAlpha() * u_ratio) * v_ratio);
+            char red = (char) (
+                    (getColor(x, y).getRed() * u_opposite + getColor(x + 1, y).getRed() * u_ratio) *
+                            v_opposite + (getColor(x, y + 1).getRed() * u_opposite +
+                            getColor(x + 1, y + 1).getRed() * u_ratio) * v_ratio);
+            char green = (char) ((getColor(x, y).getGreen() * u_opposite +
+                    getColor(x + 1, y).getGreen() * u_ratio) * v_opposite +
+                    (getColor(x, y + 1).getGreen() * u_opposite +
+                            getColor(x + 1, y + 1).getGreen() * u_ratio) * v_ratio);
+            char blue = (char) ((getColor(x, y).getBlue() * u_opposite +
+                    getColor(x + 1, y).getBlue() * u_ratio) * v_opposite +
+                    (getColor(x, y + 1).getBlue() * u_opposite +
+                            getColor(x + 1, y + 1).getBlue() * u_ratio) * v_ratio);
+            char alpha = (char) ((getColor(x, y).getAlpha() * u_opposite +
+                    getColor(x + 1, y).getAlpha() * u_ratio) * v_opposite +
+                    (getColor(x, y + 1).getAlpha() * u_opposite +
+                            getColor(x + 1, y + 1).getAlpha() * u_ratio) * v_ratio);
             return new Color(red, green, blue, alpha).getColor();
         }
 
-        public Image convertTo(int newWidth, int newHeight) {
+        public Image bilinearSqueeze(int newWidth, int newHeight) {
             int[] colors = new int[newWidth * newHeight];
             double pixelOffsetY = (1.0D / newWidth) / 2.0D;
             double pixelOffsetX = (1.0D / newHeight) / 2.0D;
             for (int i = 0; i < newHeight; i++) {
                 for (int j = 0; j < newWidth; j++) {
-                    colors[i * newWidth + j] = getPixel(pixelOffsetX + (i * 1.0D) / newHeight, pixelOffsetY + (j * 1.0D) / newWidth);
+                    colors[i * newWidth + j] = getBilinearPixel(
+                            pixelOffsetX + (i * 1.0D) / newHeight,
+                            pixelOffsetY + (j * 1.0D) / newWidth);
                 }
             }
             return new Image(colors, newWidth, newHeight);
+        }
+
+        public Image rotate() {
+            int[] newColors = new int[height * width];
+            for(int n = 0; n < height * width; n++) {
+                int i = n / height;
+                int j = n % height;
+                newColors[n] = colors[width * j + i].getColor();
+            }
+            return new Image(newColors, height, width);
         }
 
         public Bitmap convertToBitmap() {
@@ -150,8 +170,9 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
             int[] colors = new int[bitmap.getWidth() * bitmap.getHeight()];
             bitmap.getPixels(colors, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
             Image image = new Image(colors, bitmap.getWidth(), bitmap.getHeight());
-            Image convertedImage = image.convertTo((int) (bitmap.getWidth() / squeezing), (int) (bitmap.getHeight() / squeezing));
-            bitmap = convertedImage.convertToBitmap();
+            Image convertedImage = image.bilinearSqueeze((int) (bitmap.getWidth() /
+                    squeezing), (int) (bitmap.getHeight() / squeezing));
+            bitmap = convertedImage.rotate().convertToBitmap();
             Canvas canvas = null;
             try {
                 canvas = holder.lockCanvas(null);
