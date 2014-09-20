@@ -14,6 +14,7 @@ import android.view.View;
 public class MyImage extends View {
     BitmapFactory.Options options = new BitmapFactory.Options();
     Bitmap bitmap;
+    Matrix m = new Matrix();
 
     public MyImage(Context context) {
         super(context);
@@ -61,11 +62,11 @@ public class MyImage extends View {
         int[] c = new int[w * h];
         b.getPixels(c, 0, w, 0, 0, w, h);
         for (int i = 0; i < w * h; i++) {
-            int red = Color.red(c[i]);
-            int green = Color.green(c[i]);
-            int blue = Color.blue(c[i]);
             int white = 0xff;
-            c[i] = Color.rgb((red + white) / 2, (green + white) / 2, (blue + white) / 2);
+            int newRed = (((c[i] >> 8 * 2) & white) + white) >>> 1;
+            int newGreen = (((c[i] >> 8) & white) + white) >>> 1;
+            int newBlue = ((c[i] & white) + white) >>> 1;
+            c[i] = (white << 8 * 3) | (newRed << 8 * 2) | (newGreen << 8) | newBlue;
         }
         return Bitmap.createBitmap(c, w, h, Bitmap.Config.ARGB_8888);
     }
@@ -84,7 +85,6 @@ public class MyImage extends View {
                 newColors[y * newWidth + x] = c[(y * intFactor / 100) * w + (x * intFactor / 100)];
             }
         }
-
         return Bitmap.createBitmap(newColors, newWidth, newHeight, Bitmap.Config.ARGB_8888);
     }
 
@@ -94,6 +94,6 @@ public class MyImage extends View {
 
     @Override
     public void onDraw(Canvas canvas) {
-        canvas.drawBitmap(bitmap, new Matrix(), null);
+        canvas.drawBitmap(bitmap, m, null);
     }
 }
