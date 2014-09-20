@@ -43,7 +43,7 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
-    private class Color {
+    private static class Color {
         private final int color;
 
         private Color(int color) {
@@ -54,24 +54,43 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
             color = alpha * (1 << 24) + red * (1 << 16) + green * (1 << 8) + blue;
         }
 
-        public int getRed() {
-            return (color >> 16) & 255;
+        public char getRed() {
+            return (char) ((color >> 16) & 255);
         }
 
-        public int getGreen() {
-            return (color >> 8) & 255;
+        public char getGreen() {
+            return (char) ((color >> 8) & 255);
         }
 
-        public int getBlue() {
-            return color & 255;
+        public char getBlue() {
+            return (char) (color & 255);
         }
 
-        public int getAlpha() {
-            return (color >> 24) & 255;
+        public char getAlpha() {
+            return (char) ((color >> 24) & 255);
         }
 
         public int getColor() {
             return color;
+        }
+
+        public static char changeContrast(char source, double contrast) {
+            double newSource = source;
+            newSource /= 255.0;
+            newSource -= 0.5;
+            newSource *= contrast;
+            newSource += 0.5;
+            newSource *= 255;
+
+            if (newSource < 0)
+                newSource = 0;
+            if (newSource > 255)
+                newSource = 255;
+            return (char) newSource;
+        }
+
+        public Color changeContrast(double contrast) {
+            return new Color(changeContrast(getRed(), contrast), changeContrast(getGreen(), contrast), changeContrast(getBlue(), contrast), changeContrast(getAlpha(), contrast));
         }
     }
 
@@ -150,6 +169,18 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
             return new Image(newColors, height, width);
         }
 
+        public Image changeContrast(double contrast) {
+            int[] newColors = new int[height * width];
+
+            contrast *= contrast;
+
+            for(int n = 0; n < height * width; n++) {
+                newColors[n] = colors[n].changeContrast(contrast).getColor();
+            }
+
+            return new Image(newColors, width, height);
+        }
+
         public Bitmap convertToBitmap() {
             return Bitmap.createBitmap(simpleColors, width, height, Bitmap.Config.RGB_565);
         }
@@ -166,17 +197,18 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
 
         @Override
         public void run() {
-            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), drawableId);
-            int[] colors = new int[bitmap.getWidth() * bitmap.getHeight()];
-            bitmap.getPixels(colors, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-            Image image = new Image(colors, bitmap.getWidth(), bitmap.getHeight());
-            Image convertedImage = image.bilinearSqueeze((int) (bitmap.getWidth() /
-                    squeezing), (int) (bitmap.getHeight() / squeezing));
-            bitmap = convertedImage.rotate().convertToBitmap();
+            Bitmap oldBitmap = BitmapFactory.decodeResource(getResources(), drawableId);
+            int[] colors = new int[oldBitmap.getWidth() * oldBitmap.getHeight()];
+            oldBitmap.getPixels(colors, 0, oldBitmap.getWidth(), 0, 0, oldBitmap.getWidth(), oldBitmap.getHeight());
+            Image image = new Image(colors, oldBitmap.getWidth(), oldBitmap.getHeight());
+            Image convertedImage = image.bilinearSqueeze((int) (oldBitmap.getWidth() /
+                    squeezing), (int) (oldBitmap.getHeight() / squeezing));
+            Bitmap newBitmap = convertedImage.rotate().changeContrast(0.81D).convertToBitmap();
             Canvas canvas = null;
             try {
                 canvas = holder.lockCanvas(null);
-                canvas.drawBitmap(bitmap, 0, 0, null);
+                canvas.drawBitmap(oldBitmap, 0, 0, null);
+                canvas.drawBitmap(newBitmap, 0, 800, null);
             } catch (NullPointerException ignore) {
 
             } finally {
