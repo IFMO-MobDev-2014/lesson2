@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -26,16 +25,9 @@ public class MyActivity extends Activity {
         @Override
         public void onPostExecute(Bitmap bm) {
             view.setImageBitmap(bm);
-            art = null;
+            rescaleTask = null;
         }
     }
-
-    private ImageView view;
-
-    private final static int TARGET_WIDTH = 434;
-    private final static int TARGET_HEIGHT = 405;
-
-    boolean useFast = false;
 
     static int[] pixelTransformTable = new int[256];
 
@@ -45,29 +37,36 @@ public class MyActivity extends Activity {
         }
     }
 
-    Bitmap sourceBitmap = null;
-    int[] oldPixels = null;
-    Bitmap fastImage = null;
-    Bitmap slowImage = null;
+    private final static int TARGET_WIDTH = 434;
+    private final static int TARGET_HEIGHT = 405;
 
-    AsyncResizeTask art = null;
+    private boolean useFast = false;
+
+    private ImageView view;
+
+    private int[] oldPixels = null;
+    private Bitmap fastImage = null;
+    private Bitmap slowImage = null;
+    private int oldW;
+    private int oldH;
+
+    private AsyncResizeTask rescaleTask = null;
 
     private Bitmap getAdjustedImage(boolean fast) {
         int w = TARGET_WIDTH;
         int h = TARGET_HEIGHT;
-        if (sourceBitmap == null)
-            sourceBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.source);
-        int oldW = sourceBitmap.getWidth();
-        int oldH = sourceBitmap.getHeight();
+
         if (oldPixels == null) {
+            Bitmap sourceBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.source);
+            oldW = sourceBitmap.getWidth();
+            oldH = sourceBitmap.getHeight();
             oldPixels = new int[oldW * oldH];
             sourceBitmap.getPixels(oldPixels, 0, oldW, 0, 0, oldW, oldH);
         }
 
         int[] newPixels = new int[w * h];
-        int[] oldPixels = this.oldPixels;
+        int[] oldPixels = this.oldPixels; // someone said java is slightly faster this way
 
-        long startTime = System.nanoTime();
         if (fast) { // fast method: nearest
             for (int y = 0; y < h; y++) {
                 for (int x = 0; x < w; x++) {
@@ -98,8 +97,6 @@ public class MyActivity extends Activity {
                     newPixels[targetIdx] = 0xff000000 | (b << 16) | (g << 8) | r;
                 }
         }
-        Log.d("TIME", "Rescale: " + (System.nanoTime() - startTime) / 1000000);
-        startTime = System.nanoTime();
         int[] pixelTransformTable = MyActivity.pixelTransformTable;
         for (int i = 0; i < newPixels.length; i++) {
             int r = newPixels[i] & 0xff;
@@ -110,14 +107,12 @@ public class MyActivity extends Activity {
             b = pixelTransformTable[b];
             newPixels[i] = 0xff000000 | (b << 16) | (g << 8) | r;
         }
-        Log.d("TIME", "Recolor: " + (System.nanoTime() - startTime) / 1000000);
         return Bitmap.createBitmap(newPixels, w, h, Bitmap.Config.ARGB_8888);
     }
 
     @Override
     public void onTrimMemory(int level) {
         oldPixels = null;
-        sourceBitmap = null;
         if (level >= TRIM_MEMORY_UI_HIDDEN) {
             fastImage = null;
             slowImage = null;
@@ -129,9 +124,9 @@ public class MyActivity extends Activity {
             view.setImageBitmap(fastImage);
         else if (!useFast && slowImage != null)
             view.setImageBitmap(slowImage);
-        else if (art == null) {
-            art = new AsyncResizeTask();
-            art.execute(useFast);
+        else if (rescaleTask == null) {
+            rescaleTask = new AsyncResizeTask();
+            rescaleTask.execute(useFast);
         }
     }
 
