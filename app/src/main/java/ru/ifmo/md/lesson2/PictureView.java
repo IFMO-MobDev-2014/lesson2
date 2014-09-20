@@ -10,26 +10,53 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
+import java.lang.reflect.Array;
+
 /**
  * Created by vi34 on 20.09.14.
  */
 public class PictureView extends View {
     private int width;
     private int height;
-    private int pixels[];
+    private int p_image[];
+    private int image[];
+    private int image2[];
     private Bitmap bmp;
     private Resources res = getResources();
+    double perc = 1.0;
+    boolean step = true;
 
     public PictureView (Context context){
         super(context);
         bmp = BitmapFactory.decodeResource(res, R.drawable.source);
         width = bmp.getWidth();
         height = bmp.getHeight();
-        pixels = new int[width * height];
+        image = new int[width * height];
+        image2 = new int[width * height];
+        p_image = image;
         for(int i = 0; i < 100; i++)
-            pixels[100 + i] = Color.WHITE;
-        bmp.getPixels(pixels, 0, width, 0, 0, width,height);
-        change_brithness(pixels, 2.0);
+            image[100 + i] = Color.WHITE;
+        bmp.getPixels(image, 0, width, 0, 0, width,height);
+        System.arraycopy(image,0,image2,0,image.length);
+
+
+        OnClickListener listener = new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(step){
+                    p_image = image;
+                }
+                else {
+                    p_image = image2;
+                }
+                step = !step;
+                invalidate();
+            }
+        };
+
+        setOnClickListener(listener);
+
+        change_brithness(image, 2.0);
 
     }
 
@@ -63,7 +90,7 @@ public class PictureView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawBitmap(pixels,0,width,0,0,width,height,true,null);
+        canvas.drawBitmap(p_image,0,width,0,0,width,height,true,null);
     }
 }
 
