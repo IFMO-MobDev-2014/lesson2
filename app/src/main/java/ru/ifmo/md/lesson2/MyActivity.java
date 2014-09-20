@@ -70,7 +70,7 @@ public class MyActivity extends Activity {
         if (fast) { // fast method: nearest
             for (int y = 0; y < h; y++) {
                 for (int x = 0; x < w; x++) {
-                    newPixels[x + y * w] = oldPixels[(h - 1 - y) * oldW / h + x * oldH / w * oldW];
+                    newPixels[x + y * w] = oldPixels[y * oldW / h + (w - 1 - x) * oldH / w * oldW];
                 }
             }
         } else { // slow method: plain 'supersampling'
@@ -78,8 +78,8 @@ public class MyActivity extends Activity {
 
             for (int x = 0; x < oldW; x++)
                 for (int y = 0; y < oldH; y++) {
-                    int targetX = y * w / oldH;
-                    int targetY = h - 1 - x * h / oldW;
+                    int targetX = w - 1 - y * w / oldH;
+                    int targetY = x * h / oldW;
                     int targetIdx = targetX + targetY * w;
 
                     int cpv = newPixels[targetIdx];
