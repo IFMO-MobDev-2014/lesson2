@@ -2,6 +2,7 @@ package ru.ifmo.md.lesson2;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -19,6 +20,16 @@ public class ImageMagic extends SurfaceView implements Runnable{
         raw = rawImg;
         width = w;
         height = h;
+        initImage();
+    }
+
+    private void initImage() {
+        float[] hsv = new float[3];
+        for (int i = 0; i < width * height; i++) {
+            Color.RGBToHSV((raw[i] >>> 16) & 255, (raw[i] >>> 8) & 255, raw[i] & 255, hsv);
+            hsv[2] *= 2;
+            raw[i] = Color.HSVToColor(hsv);
+        }
     }
 
     public void resume() {
