@@ -47,6 +47,6 @@
         android:layout_alignParentStart="true"
         android:layout_alignRight="@+id/scaleMode"
         android:onClick="onRSBClick"
-        android:text="Rotate, scale and brighten the picture" />
+        android:text="@string/button_text" />
 
 </RelativeLayout>

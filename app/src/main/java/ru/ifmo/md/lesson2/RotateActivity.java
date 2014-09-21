@@ -46,10 +46,10 @@ public class RotateActivity extends Activity {
     public void toggleScaleMode() {
         scaleMode = !scaleMode;
         if (scaleMode) {
-            scaleModeView.setText("fast scale");
+            scaleModeView.setText(R.string.scale_fast);
             scaleModeView.setTextColor(Color.RED);
         } else {
-            scaleModeView.setText("accurate scale");
+            scaleModeView.setText(R.string.scale_best);
             scaleModeView.setTextColor(Color.BLUE);
         }
     }
@@ -81,11 +81,11 @@ public class RotateActivity extends Activity {
             // display message box
             AlertDialog ad = new AlertDialog.Builder(RotateActivity.this).create();
             ad.setCancelable(false);
-            String scaleTimeMsg = "scale time = " + times[0] + "ms";
-            String rotateTimeMsg = "rotate time = " + times[1] + "ms";
-            String brightenTimeMsg = "brighten time = " + times[2] + "ms";
+            String scaleTimeMsg = getString(R.string.dialog_scale_time) + " = " + times[0] + getString(R.string.dialog_ms);
+            String rotateTimeMsg = getString(R.string.dialog_rotate_time) + " = " + times[1] + getString(R.string.dialog_ms);
+            String brightenTimeMsg = getString(R.string.dialog_brighten_time) + " = " + times[2] + getString(R.string.dialog_ms);
             ad.setMessage(scaleTimeMsg + "\n" + rotateTimeMsg + "\n" + brightenTimeMsg);
-            ad.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
+            ad.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.dialog_ok), new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     dialogInterface.dismiss();
