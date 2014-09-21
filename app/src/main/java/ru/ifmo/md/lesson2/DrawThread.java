@@ -18,16 +18,14 @@ import android.view.SurfaceHolder;
 public class DrawThread extends Thread {
     private boolean running = false;
     private SurfaceHolder surfaceHolder = null;
-    private Bitmap picture = null;
-    private Bitmap originalPicture = null;
 
+    private Bitmap picture = null;
     private int width, height;
     private int [] pixels = null;
-    private int [] originalPixels = null;
     private int [] smartCompressPixels = null;
     private int [] stupidCompressPixels = null;
     // brightPixels[] can consist of negative rgb (else we can loose our colors when we will
-    //                                              make bright down)
+    //                                              decrease the brightness)
     //private int [] brightPixels = null;
 
     public enum CompressType {STUPID, SMART};
@@ -35,26 +33,26 @@ public class DrawThread extends Thread {
 
     public DrawThread(SurfaceHolder surfaceHolder, Resources resources) {
         this.surfaceHolder = surfaceHolder;
-        originalPicture = BitmapFactory.decodeResource(resources, R.drawable.source);
-        picture = originalPicture;
+        picture = BitmapFactory.decodeResource(resources, R.drawable.source);
         width = picture.getWidth();
         height = picture.getHeight();
-        originalPixels = new int[width * height];
-        picture.getPixels(originalPixels, 0, width, 0, 0, width, height);
-        pixels = originalPixels;
+        pixels = new int[width * height];
+        picture.getPixels(pixels, 0, width, 0, 0, width, height);
 
+        makeBrightUp();
         compressSmart(405, 434);
         turn90();
-        makeBrightUp();
         smartCompressPixels = pixels;
 
-        pixels = originalPixels;
-        width = originalPicture.getWidth();
-        height = originalPicture.getHeight();
+        picture = BitmapFactory.decodeResource(resources, R.drawable.source);
+        width = picture.getWidth();
+        height = picture.getHeight();
+        pixels = new int[width * height];
+        picture.getPixels(pixels, 0, width, 0, 0, width, height);
 
+        makeBrightUp();
         compressStupid(405, 434);
         turn90();
-        makeBrightUp();
         stupidCompressPixels = pixels;
     }
 
@@ -86,18 +84,20 @@ public class DrawThread extends Thread {
     public void makeBrightUp() {
         for (int i = 0; i < width * height; i++) {
             int curPixel = pixels[i];
-            int a = (curPixel & 0xff000000) >> 24;
             int r = (curPixel & 0x00ff0000) >> 16;
             int g = (curPixel & 0x0000ff00) >> 8;
             int b = curPixel & 0x000000ff;
 
-            r = r + 128;
-            g = g + 128;
-            b = b + 128;
+//            r = r + 128;
+//            g = g + 128;
+//            b = b + 128;
+            r *= 2;
+            g *= 2;
+            b *= 2;
             if (r > 0xff) r = 0xff;
             if (g > 0xff) g = 0xff;
             if (b > 0xff) b = 0xff;
-            curPixel = (a << 24) | (r << 16) | (g << 8) | b;
+            curPixel = 0xff000000 | (r << 16) | (g << 8) | b;
             pixels[i] = curPixel;
         }
     }
@@ -105,7 +105,6 @@ public class DrawThread extends Thread {
     public void compressStupid(int width, int height) {
         float scaleX = (float)this.width / (float)width;
         float scaleY = (float)this.height / (float)height;
-        System.out.println(scaleX + " " + scaleY);
         int [] newPixels = new int[width * height];
         float curY = 0;
         for (int j = 0; j < height; j++, curY += scaleY) {
@@ -124,29 +123,26 @@ public class DrawThread extends Thread {
         float scaleX = (float)this.width / (float)width;
         float scaleY = (float)this.height / (float)height;
         int [] newPixels = new int[width * height];
-        float curY = 0;
-        for (int j = 0; j < height; j++, curY += scaleY) {
-            float curX = 0;
-            for (int i = 0; i < width; i++, curX += scaleX) {
-                int x2 = (int)Math.min(this.width, curX + Math.ceil(scaleX));
-                int y2 = (int)Math.min(this.height, curY + Math.ceil(scaleY));
-                int pixelsCnt = (x2 - (int)curX) * (y2 - (int)curY);
-
-                int na = 0, nr = 0, ng = 0, nb = 0;
-                for (int x = (int)curX; x < x2; x++) {
-                    for (int y = (int)curY; y < y2; y++) {
+        float y1 = 0;
+        for (int j = 0; j < height; j++, y1 += scaleY) {
+            float x1 = 0;
+            for (int i = 0; i < width; i++, x1 += scaleX) {
+                int x2 = (int)Math.min(this.width, x1 + Math.ceil(scaleX));
+                int y2 = (int)Math.min(this.height, y1 + Math.ceil(scaleY));
+                int pixelsCnt = (x2 - (int)x1) * (y2 - (int)y1);
+                int nr = 0, ng = 0, nb = 0;
+                for (int x = (int)x1; x < x2; x++) {
+                    for (int y = (int)y1; y < y2; y++) {
                         int curPixel = pixels[y * this.width + x];
-                        na += ((curPixel & 0xff000000) >> 24);
                         nr += ((curPixel & 0x00ff0000) >> 16);
                         ng += ((curPixel & 0x0000ff00) >> 8);
                         nb += ( curPixel & 0x000000ff);
                     }
                 }
-                na /= pixelsCnt;
                 nr /= pixelsCnt;
                 ng /= pixelsCnt;
                 nb /= pixelsCnt;
-                newPixels[j * width + i] = (na << 24) | (nr << 16) | (ng << 8) | nb;
+                newPixels[j * width + i] = 0xff000000 | (nr << 16) | (ng << 8) | nb;
             }
         }
         this.width = width;
