@@ -13,26 +13,128 @@ import java.util.TreeSet;
 public class BitmapHandler {
     private static int width;
     private static int height;
-    private static int newWidth;
-    private static int newHeight;
 
+    private static double k;
     private static int[] colors;
 
-    public static Bitmap processBitmap(Bitmap original, boolean fastCompress, double k) {
+    public static Bitmap processBitmap(Bitmap original, boolean fastCompress, double _k) {
         width = original.getWidth();
         height = original.getHeight();
         colors = new int[width * height];
         original.getPixels(colors, 0, width, 0, 0, width, height);
-        newWidth = (int)Math.round(width * 1.0 / k);
-        newHeight = (int)Math.round(height * 1.0 / k);
+        k = _k;
         if (fastCompress)
-            compress();
-        increaseBrightness(30);
+            fastCompress();
+        else
+            qualityCompress();
+        //turn();
+        increaseBrightness(50);
         return Bitmap.createBitmap(colors, 0, width, width, height, Bitmap.Config.ARGB_8888);
     }
 
     private static void fastCompress() {
+        int newWidth = (int)Math.round(width * 1.0 / k);
+        int newHeight = (int)Math.round(height * 1.0 / k);
+        int[] newColors = new int[newHeight * newWidth];
+        for (int y = 0; y < newHeight; y++) {
+            for (int x = 0; x < newWidth; x++) {
+                int oldX = (int)Math.round(x * k);
+                int oldY = (int)Math.round(y * k);
+                newColors[y * newWidth + x] = colors[oldY * width + oldX];
+            }
+        }
+        colors = newColors;
+        width = newWidth;
+        height = newHeight;
+    }
 
+    private static int fA(int x, int y) {
+        return Color.alpha(colors[y * width + x]);
+    }
+    private static int fR(int x, int y) {
+        return Color.red(colors[y * width + x]);
+    }
+    private static int fG(int x, int y) {
+        return Color.green(colors[y * width + x]);
+    }
+    private static int fB(int x, int y) {
+        return Color.blue(colors[y * width + x]);
+    }
+
+
+
+    private static int interpolation(double x, double y) {
+
+        double tx = x;
+        double ty = y;
+        x = x - Math.floor(x);
+        y = y - Math.floor(y);
+        double b1 = (1.0/4)*(x-1)*(x-2)*(x+1)*(y-1)*(y-2)*(y+1);
+        double b2 = -(1.0/4)*(x)*(x-2)*(x+1)*(y-1)*(y-2)*(y+1);
+        double b3 = -(1.0/4)*(x - 1)*(x-2)*(x+1)*(y)*(y-2)*(y+1);
+        double b4 = (1.0/4)*(x)*(x-2)*(x+1)*(y)*(y-2)*(y+1);
+
+        double b5 = -(1.0/12)*(x)*(x-2)*(x-1)*(y-1)*(y-2)*(y+1);
+        double b6 = -(1.0/12)*(x+1)*(x-2)*(x-1)*(y-1)*(y-2)*(y);
+        double b7 = (1.0/12)*(x)*(x-2)*(x-1)*(y)*(y-2)*(y+1);
+        double b8 = (1.0/12)*(x)*(x-2)*(x+1)*(y-1)*(y-2)*(y);
+
+        double b9 = (1.0/12)*(x)*(x+1)*(x-1)*(y-1)*(y-2)*(y+1);
+        double b10 = (1.0/12)*(x+1)*(x-2)*(x-1)*(y-1)*(y)*(y+1);
+        double b11 = (1.0/36)*(x)*(x-2)*(x-1)*(y-1)*(y-2)*(y);
+        double b12 = -(1.0/12)*(x)*(x+1)*(x-1)*(y)*(y-2)*(y+1);
+
+        double b13 = -(1.0/12)*(x)*(x-2)*(x+1)*(y-1)*(y)*(y+1);
+        double b14 = -(1.0/36)*(x)*(x+1)*(x-1)*(y-1)*(y-2)*(y);
+        double b15 = -(1.0/36)*(x)*(x-2)*(x-1)*(y-1)*(y)*(y+1);
+        double b16 = (1.0/36)*(x)*(x+1)*(x-1)*(y-1)*(y)*(y+1);
+
+        int rx = (int)Math.round(tx);
+        int ry = (int)Math.round(ty);
+        int[] ax = new int[4];
+        int[] ay = new int[4];
+        int add = 0;
+        if (rx == 0)
+            add = 1;
+        for (int i = Math.min(width - 1, rx + 2 + add), cnt = 0; cnt < 4; ++cnt, --i) {
+            ax[4 - cnt - 1] = i;
+        }
+        if (ry == 0)
+            add = 1;
+        for (int i = Math.min(height - 1, ry + 2 + add), cnt = 0; cnt < 4; ++cnt, --i) {
+            ay[4 - cnt - 1] = i;
+        }
+        int A =  (int)Math.round(b1*fA(ax[1], ay[1]) + b2*fA(ax[1], ay[2]) + b3*fA(ax[2], ay[1]) + b4*fA(ax[2], ay[2]) + b5*fA(ax[1], ay[0]) + b6*fA(ax[0], ay[1]) +
+                b7*fA(ax[2], ay[0]) + b8*fA(ax[0], ay[2]) + b9*fA(ax[1], ay[3]) + b10*fA(ax[3], ay[1]) + b11*fA(ax[0], ay[0]) + b12*fA(ax[2], ay[3]) + b13*fA(ax[3], ay[2]) +
+                b14*fA(ax[0], ay[3]) + b15*fA(ax[3], ay[0]) + b16*fA(ax[3], ay[3]));
+
+        int R = (int)Math.round(b1*fR(ax[1], ay[1]) + b2*fR(ax[1], ay[2]) + b3*fR(ax[2], ay[1]) + b4*fR(ax[2], ay[2]) + b5*fR(ax[1], ay[0]) + b6*fR(ax[0], ay[1]) +
+                b7*fR(ax[2], ay[0]) + b8*fR(ax[0], ay[2]) + b9*fR(ax[1], ay[3]) + b10*fR(ax[3], ay[1]) + b11*fR(ax[0], ay[0]) + b12*fR(ax[2], ay[3]) + b13*fR(ax[3], ay[2]) +
+                b14*fR(ax[0], ay[3]) + b15*fR(ax[3], ay[0]) + b16*fR(ax[3], ay[3]));
+
+        int G = (int)Math.round(b1*fG(ax[1], ay[1]) + b2*fG(ax[1], ay[2]) + b3*fG(ax[2], ay[1]) + b4*fG(ax[2], ay[2]) + b5*fG(ax[1], ay[0]) + b6*fG(ax[0], ay[1]) +
+                b7*fG(ax[2], ay[0]) + b8*fG(ax[0], ay[2]) + b9*fG(ax[1], ay[3]) + b10*fG(ax[3], ay[1]) + b11*fG(ax[0], ay[0]) + b12*fG(ax[2], ay[3]) + b13*fG(ax[3], ay[2]) +
+                b14*fG(ax[0], ay[3]) + b15*fG(ax[3], ay[0]) + b16*fG(ax[3], ay[3]));
+
+        int B = (int)Math.round(b1*fB(ax[1], ay[1]) + b2*fB(ax[1], ay[2]) + b3*fB(ax[2], ay[1]) + b4*fB(ax[2], ay[2]) + b5*fB(ax[1], ay[0]) + b6*fB(ax[0], ay[1]) +
+                b7*fB(ax[2], ay[0]) + b8*fB(ax[0], ay[2]) + b9*fB(ax[1], ay[3]) + b10*fB(ax[3], ay[1]) + b11*fB(ax[0], ay[0]) + b12*fB(ax[2], ay[3]) + b13*fB(ax[3], ay[2]) +
+                b14*fB(ax[0], ay[3]) + b15*fB(ax[3], ay[0]) + b16*fB(ax[3], ay[3]));
+
+        return Color.argb(A, R, G, B);
+    }
+
+    private static void qualityCompress() {
+        int newWidth = (int)Math.round(width * 1.0 / k);
+        int newHeight = (int)Math.round(height * 1.0 / k);
+        int[] newColors = new int[newHeight * newWidth];
+        for (int y = 0; y < newHeight; y++) {
+            for (int x = 0; x < newWidth; x++) {
+                newColors[y * newWidth + x] = interpolation(k * x, k * y);
+            }
+        }
+        colors = newColors;
+        width = newWidth;
+        height = newHeight;
     }
 
     private static int sqr(int a) {
@@ -54,59 +156,6 @@ public class BitmapHandler {
         return (int)Math.round(Math.sqrt(sqr(x1 - x2) + sqr(y1 - y2) + sqr(z1 - z2) + sqr(k1 - k2)));
     }
 
-    private static void compress() {
-        int cnt = width - newWidth;
-        {
-            TreeSet<Pair> set = new TreeSet<Pair>();
-            for (int y = 0; y < height; y++) {
-                set.clear();
-                for (int x = 0; x < width - 1; x++) {
-                    set.add(new Pair(getLength(colors[y * width + x + 1], colors[y * width + x]), x));
-                    if (set.size() > cnt)
-                        set.remove(set.last());
-                }
-                Pair tmp = new Pair(0, 0);
-                for (int x = 0, point = 0; x < width - 1; x++) {
-                    tmp.first = getLength(colors[y * width + x + 1], colors[y * width + x]);
-                    tmp.second = x;
-                    if (!set.contains(tmp)) {
-                        colors[y * width + point] = colors[y * width + x];
-                        point++;
-                    }
-                }
-            }
-        }
-        cnt = height - newHeight;
-        {
-            TreeSet<Pair> set = new TreeSet<Pair>();
-            for (int x = 0; x < width; x++) {
-                set.clear();
-                for (int y = 0; y < height - 1; y++) {
-                    set.add(new Pair(getLength(colors[(y+1) * width + x], colors[y * width + x]), y));
-                    if (set.size() > cnt)
-                        set.remove(set.last());
-                }
-                Pair tmp = new Pair(0, 0);
-                for (int y = 0, point = 0; y < height - 1; y++) {
-                    tmp.first = getLength(colors[(y+1) * width + x], colors[y * width + x]);
-                    tmp.second = y;
-                    if (!set.contains(tmp)) {
-                        colors[point * width + x] = colors[y * width + x];
-                        point++;
-                    }
-                }
-            }
-        }
-        int[] newColors = new int[newHeight * newWidth];
-        for (int x = 0; x < newWidth; x++) {
-            for (int y = 0; y < newHeight; y++) {
-                newColors[y * newWidth + x] = colors[y * width + x];
-            }
-        }
-        colors = newColors;
-        width = newWidth;
-        height = newHeight;
-    }
 
     private static void turn() {
         int[] turnColors;

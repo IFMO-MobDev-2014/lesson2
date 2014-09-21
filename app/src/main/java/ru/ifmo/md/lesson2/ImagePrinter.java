@@ -23,15 +23,13 @@ import java.nio.ByteBuffer;
  */
 
 
-public class ImagePrinter extends SurfaceView {
+public class ImagePrinter extends View {
     private class DrawThread extends Thread{
         private ImagePrinter printer;
-        private SurfaceHolder holder;
         private boolean isRunning;
 
-        public DrawThread(ImagePrinter printer, SurfaceHolder holder) {
+        public DrawThread(ImagePrinter printer) {
             this.printer = printer;
-            this.holder = holder;
         }
         public void setRunning(boolean running) {
             isRunning = running;
@@ -39,30 +37,35 @@ public class ImagePrinter extends SurfaceView {
         @Override
         public void run() {
             while (isRunning) {
-               while (!isInterrupted()) {
+               while (!interrupted()) {
                     try {
                         sleep(100);
-                    } catch (InterruptedException e) {}
+                    } catch (InterruptedException e) {break;}
                 }
-               synchronized (holder) {
-                    if (holder.getSurface().isValid()) {
-                        Canvas canvas = holder.lockCanvas();
-                        printer.onDraw(canvas);
-                        holder.unlockCanvasAndPost(canvas);
-                    }
-               }
+                synchronized (printer) {
+                    printer.postInvalidate();
+                }
             }
         }
     }
 
-    private SurfaceHolder holder;
     private DrawThread drawThread;
     private Bitmap image;
+    private Bitmap qualityImage;
+    private Bitmap fastImage;
+    private boolean isQuality = false;
     public ImagePrinter(Context context) {
         super(context);
         image = BitmapFactory.decodeResource(getResources(), R.drawable.source);
-        image = BitmapHandler.processBitmap(image, true, 1.73);
-        holder = getHolder();
+        qualityImage = BitmapHandler.processBitmap(image, false, 1.73);
+        fastImage = BitmapHandler.processBitmap(image, true, 1.73);
+        setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isQuality ^= true;
+                repaint();
+            }
+        });
     }
 
     @Override
@@ -71,19 +74,18 @@ public class ImagePrinter extends SurfaceView {
     }
     @Override
     public void onDraw(Canvas canvas) {
-        float scaleX = ((float)getWidth()) / image.getWidth();
-        float scaleY = ((float)getHeight()) / image.getHeight();
-        //canvas.scale(Math.min(scaleX, scaleY), Math.min(scaleX, scaleY));
-        canvas.drawBitmap(image, 0, 0, null);
+        Bitmap image = isQuality ? qualityImage : fastImage;
+        float x = ((float)getWidth() - image.getWidth()) / 2;
+        float y = ((float)getHeight() - image.getHeight()) / 2;
+        canvas.drawBitmap(image, x, y, null);
     }
     public void resume() {
-        drawThread = new DrawThread(this, holder);
+        drawThread = new DrawThread(this);
         drawThread.setRunning(true);
         drawThread.start();
         repaint();
     }
     public void pause() {
-        Log.i("WIDTH = " + image.getWidth() + "   ", "HEIGHT = " + image.getHeight());
         drawThread.setRunning(false);
         try {
             drawThread.join();
@@ -94,4 +96,5 @@ public class ImagePrinter extends SurfaceView {
     public void repaint() {
         drawThread.interrupt();
     }
+
 }
