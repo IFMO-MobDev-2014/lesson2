@@ -1,17 +1,17 @@
 package ru.ifmo.md.lesson2;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class RotateActivity extends Activity {
 
@@ -78,20 +78,14 @@ public class RotateActivity extends Activity {
         }
 
         protected void onPostExecute(long[] times) {
-            // display message box
-            AlertDialog ad = new AlertDialog.Builder(RotateActivity.this).create();
-            ad.setCancelable(false);
+            // display toast with useful information
             String scaleTimeMsg = getString(R.string.dialog_scale_time) + " = " + times[0] + getString(R.string.dialog_ms);
             String rotateTimeMsg = getString(R.string.dialog_rotate_time) + " = " + times[1] + getString(R.string.dialog_ms);
             String brightenTimeMsg = getString(R.string.dialog_brighten_time) + " = " + times[2] + getString(R.string.dialog_ms);
-            ad.setMessage(scaleTimeMsg + "\n" + rotateTimeMsg + "\n" + brightenTimeMsg);
-            ad.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.dialog_ok), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                }
-            });
-            ad.show();
+            String toastText = scaleTimeMsg + "\n" + rotateTimeMsg + "\n" + brightenTimeMsg;
+            Toast toast = Toast.makeText(getApplicationContext(), toastText, Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+            toast.show();
         }
     }
 }
