@@ -19,12 +19,12 @@ public class ImageMagic extends SurfaceView implements Runnable{
     Context context;
     Matrix matrix = new Matrix();
 
-    ImageMagic(Context c, Bitmap image, int w, int h) {
+    ImageMagic(Context c, Bitmap image) {
         super(c);
         holder = getHolder();
         img = image;
-        width = w;
-        height = h;
+        width = image.getWidth();
+        height = image.getHeight();
         context = c;
         initImage();
     }
