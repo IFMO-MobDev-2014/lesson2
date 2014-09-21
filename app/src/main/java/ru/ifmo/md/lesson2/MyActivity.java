@@ -19,9 +19,7 @@ public class MyActivity extends Activity {
         if (!imgFile.exists())
             Log.d("ERROR", "File not found");
         Bitmap img = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-        int[] intRaw = new int[img.getWidth() * img.getHeight()];
-        img.getPixels(intRaw, 0, img.getWidth(), 0, 0, img.getWidth(), img.getHeight());
-        magic = new ImageMagic(this, intRaw, img.getWidth(), img.getHeight());
+        magic = new ImageMagic(this, img, img.getWidth(), img.getHeight());
         setContentView(magic);
     }
 
