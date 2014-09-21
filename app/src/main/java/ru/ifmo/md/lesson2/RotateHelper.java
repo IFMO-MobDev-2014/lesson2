@@ -59,27 +59,38 @@ public class RotateHelper {
                 }
             }
         } else {
-            for (int y = 0; y < newH; y++) {
-                int yw = y * newW;
-                for (int x = 0; x < newW; x++) {
-                    int x1 = (int) (x * scaleX);
-                    int y1 = (int) (y * scaleY);
-                    int x2 = (int) ((x + 1) * scaleX - 1e-6);
-                    int y2 = (int) ((y + 1) * scaleY - 1e-6);
-                    int cnt = (y2 - y1 + 1) * (x2 - x1 + 1);
-                    int red = 0;
-                    int green = 0;
-                    int blue = 0;
-                    for (int yy = y1; yy <= y2; yy++) {
-                        for (int xx = x1; xx <= x2; xx++) {
-                            int color = pixels[yy * width + xx];
-                            red += (color >> 16) & 0xFF;
-                            green += (color >> 8) & 0xFF;
-                            blue += color & 0xFF;
-                        }
-                    }
-                    newPixels[yw + x] = 0xFF000000 | (red / cnt) << 16 | (green / cnt) << 8 | (blue / cnt);
+            int newSize = newW * newH;
+            int[] cnt = new int[newSize];
+            int[] red = new int[newSize];
+            int[] green = new int[newSize];
+            int[] blue = new int[newSize];
+
+            for (int i = 0; i < newSize; i++) {
+                cnt[i] = red[i] = green[i] = blue[i] = 0;
+            }
+
+            for (int y = 0; y < height; y++) {
+                int newY = y * newW / width;
+                int newYW = newY * newW;
+                int yw = y * width;
+                for (int x = 0; x < width; x++) {
+                    int newX = x * newH / height;
+                    int color = pixels[yw + x];
+                    int index = newYW + newX;
+                    int r = (color >> 16) & 0xFF;
+                    int g = (color >> 8) & 0xFF;
+                    int b = color & 0xFF;
+
+                    red[index] += r;
+                    green[index] += g;
+                    blue[index] += b;
+                    cnt[index]++;
                 }
+            }
+
+            for (int i = 0; i < newSize; i++) {
+                int count = cnt[i];
+                newPixels[i] = 0xFF000000 | (red[i] / count) << 16 | (green[i] / count) << 8 | (blue[i] / count);
             }
         }
 
