@@ -91,6 +91,7 @@ public class MyActivity extends Activity {
 
         Bitmap bitmap3 = Bitmap.createBitmap(nWidth, nHeight, Bitmap.Config.ARGB_8888);
         bitmap3.setPixels(pixels3, 0, nWidth, 0, 0, nWidth, nHeight);
+
         ImageView myImage = (ImageView) findViewById(R.id.imageView);
         myImage.setImageBitmap(bitmap3);
 
