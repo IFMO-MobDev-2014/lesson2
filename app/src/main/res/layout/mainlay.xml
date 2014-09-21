@@ -11,13 +11,7 @@
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         android:contentDescription="@string/IDesc"
-        android:cropToPadding="false" />
+        android:cropToPadding="false"
+        android:clickable="false" />
 
-    <Switch
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Scaling"
-        android:id="@+id/switch1"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
 </RelativeLayout>

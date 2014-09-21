@@ -5,23 +5,17 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 
 public class MyActivity extends Activity {
 
-
     private final static float SCALE = 1.728f;
     private static boolean quality = true;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.mainlay);
-        ImageView imgV = (ImageView) findViewById(R.id.iV);
-        Bitmap x = BitmapFactory.decodeResource(getResources(), R.drawable.source);
-        x = beautyScale(x);
-        imgV.setImageBitmap(x);
-    }
+    Bitmap fastSaved = null;
+    Bitmap beautySaved = null;
+    private ImageView imgV;
+
     private static Bitmap fastScale(Bitmap x) {
         int oWidth = x.getWidth();
         int oHeight = x.getHeight();
@@ -37,6 +31,7 @@ public class MyActivity extends Activity {
         }
         return Bitmap.createBitmap(newPixels, 0, width, width, height, Bitmap.Config.ARGB_8888);
     }
+
     private static Bitmap beautyScale(Bitmap x) {
         int oWidth = x.getWidth();
         int oHeight = x.getHeight();
@@ -73,6 +68,7 @@ public class MyActivity extends Activity {
         }
         return Bitmap.createBitmap(newPixels, width, height, Bitmap.Config.ARGB_8888);
     }
+
     private static void increaseBrightnessOfArray(int [] a) {
         int tmpCol;
         int r, g, b;
@@ -87,6 +83,7 @@ public class MyActivity extends Activity {
             a[i] = 0xFF000000 | r | (g << 8) | (b << 16);
         }
     }
+
     private static int [] rotateArrayOfPixels(int [] pixels, int oldWidth, int oldHeight) {
         int [] rotatedPixels;
         rotatedPixels = new int [pixels.length];
@@ -97,6 +94,7 @@ public class MyActivity extends Activity {
         }
         return rotatedPixels;
     }
+
     private static Bitmap firstStepsOfTask(Bitmap x) {
         int oldWidth = x.getWidth();
         int oldHeight = x.getHeight();
@@ -105,5 +103,60 @@ public class MyActivity extends Activity {
         int [] rotatedPixels = rotateArrayOfPixels(pixels, oldWidth, oldHeight);
         increaseBrightnessOfArray(rotatedPixels);
         return Bitmap.createBitmap(rotatedPixels, oldHeight, oldWidth, Bitmap.Config.ARGB_8888);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.mainlay);
+        imgV = (ImageView) findViewById(R.id.iV);
+        imgV.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                quality = !quality;
+                if (quality) {
+                    if (beautySaved == null) {
+                        new AsyncScaling().execute(true);
+                    } else {
+                        imgV.setImageBitmap(beautySaved);
+                    }
+                } else {
+                    if (fastSaved == null) {
+                        new AsyncScaling().execute(false);
+                    } else {
+                        imgV.setImageBitmap(fastSaved);
+                    }
+                }
+            }
+        });
+        new AsyncScaling().execute(quality);
+    }
+
+    private class AsyncScaling extends AsyncTask<Boolean, Void, Bitmap> {
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            imgV.setImageBitmap(bitmap);
+        }
+
+        @Override
+        protected Bitmap doInBackground(Boolean... booleans) {
+            boolean q = booleans[0];
+            if (q) {
+                beautySaved = firstStepsOfTask(
+                        beautyScale(
+                                BitmapFactory.decodeResource(getResources(), R.drawable.source)
+                        )
+                );
+                return beautySaved;
+            } else {
+                fastSaved = firstStepsOfTask(
+                        fastScale(
+                                BitmapFactory.decodeResource(getResources(), R.drawable.source)
+                        )
+                );
+                return fastSaved;
+            }
+        }
+
     }
 }
