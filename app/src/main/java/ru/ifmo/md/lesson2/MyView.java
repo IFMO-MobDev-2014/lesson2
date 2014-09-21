@@ -15,6 +15,7 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
     private Bitmap newFastBitmap;
     private Bitmap oldBitmap;
     private Bitmap toDraw;
+    private MyImage sourceImage;
     private boolean tappedOnScreen = false;
     private boolean fast = true;
     private int[] oldColors;
@@ -27,7 +28,6 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        Log.i("Drawing", "Surface created");
         drawerThread = new DrawerThread(R.drawable.source, getHolder());
         drawerThread.start();
     }
@@ -39,7 +39,6 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-        Log.d("Drawing", "Surface destroyed");
         boolean trying = true;
         while (trying) {
             try {
@@ -52,12 +51,12 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     private class MyImage {
-        private final int[] simpleColors;
+        private final int[] colors;
         private final int width;
         private final int height;
 
         private MyImage(int[] colors, int width, int height) {
-            simpleColors = colors;
+            this.colors = colors;
             this.width = width;
             this.height = height;
             if (width * height != colors.length) {
@@ -66,88 +65,83 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         public char getRed(int x, int y) {
-            return (char) ((simpleColors[x * width + y] >> 16) & 255);
+            return (char) ((colors[x * width + y] >> 16) & 255);
         }
 
         public char getGreen(int x, int y) {
-            return (char) ((simpleColors[x * width + y] >> 8) & 255);
+            return (char) ((colors[x * width + y] >> 8) & 255);
         }
 
         public char getBlue(int x, int y) {
-            return (char) (simpleColors[x * width + y] & 255);
+            return (char) (colors[x * width + y] & 255);
         }
 
         public char getAlpha(int x, int y) {
-            return (char) ((simpleColors[x * width + y] >> 24) & 255);
+            return (char) ((colors[x * width + y] >> 24) & 255);
         }
 
-        public int getBilinearPixel(double u, double v) {
-            u = u * height - 0.5;
-            v = v * width - 0.5;
-            int x = (int) Math.floor(u);
-            int y = (int) Math.floor(v);
-            double u_ratio = u - x;
-            double v_ratio = v - y;
-            double u_opposite = 1 - u_ratio;
-            double v_opposite = 1 - v_ratio;
-            char red = (char) (
-                    (getRed(x, y) * u_opposite + getRed(x + 1, y) * u_ratio) * v_opposite +
-                            (getRed(x, y + 1) * u_opposite + getRed(x + 1, y + 1) * u_ratio) *
-                                    v_ratio);
+        public int getBilinearPixel(double heightRatio, double widthRatio) {
+            heightRatio = heightRatio * height - 0.5;
+            widthRatio = widthRatio * width - 0.5;
+            int x = (int) Math.floor(heightRatio);
+            int y = (int) Math.floor(widthRatio);
+            double uRatio = heightRatio - x;
+            double vRatio = widthRatio - y;
+            double uOpposite = 1 - uRatio;
+            double vOpposite = 1 - vRatio;
+            char red = (char) ((getRed(x, y) * uOpposite + getRed(x + 1, y) * uRatio) * vOpposite +
+                    (getRed(x, y + 1) * uOpposite + getRed(x + 1, y + 1) * uRatio) * vRatio);
             char green = (char) (
-                    (getGreen(x, y) * u_opposite + getGreen(x + 1, y) * u_ratio) * v_opposite +
-                            (getGreen(x, y + 1) * u_opposite + getGreen(x + 1, y + 1) * u_ratio) *
-                                    v_ratio);
+                    (getGreen(x, y) * uOpposite + getGreen(x + 1, y) * uRatio) * vOpposite +
+                            (getGreen(x, y + 1) * uOpposite + getGreen(x + 1, y + 1) * uRatio) *
+                                    vRatio);
             char blue = (char) (
-                    (getBlue(x, y) * u_opposite + getBlue(x + 1, y) * u_ratio) * v_opposite +
-                            (getBlue(x, y + 1) * u_opposite + getBlue(x + 1, y + 1) * u_ratio) *
-                                    v_ratio);
+                    (getBlue(x, y) * uOpposite + getBlue(x + 1, y) * uRatio) * vOpposite +
+                            (getBlue(x, y + 1) * uOpposite + getBlue(x + 1, y + 1) * uRatio) *
+                                    vRatio);
             char alpha = (char) (
-                    (getAlpha(x, y) * u_opposite + getAlpha(x + 1, y) * u_ratio) * v_opposite +
-                            (getAlpha(x, y + 1) * u_opposite + getAlpha(x + 1, y + 1) * u_ratio) *
-                                    v_ratio);
+                    (getAlpha(x, y) * uOpposite + getAlpha(x + 1, y) * uRatio) * vOpposite +
+                            (getAlpha(x, y + 1) * uOpposite + getAlpha(x + 1, y + 1) * uRatio) *
+                                    vRatio);
             return alpha * (1 << 24) + red * (1 << 16) + green * (1 << 8) + blue;
         }
 
+        public void increaseBrightness() {
+            for (int i = 0; i < colors.length; i++) {
+                char alpha = (char) ((colors[i] >> 24) & 255);
+                char red = (char) ((colors[i] >> 16) & 255);
+                char green = (char) ((colors[i] >> 8) & 255);
+                char blue = (char) ((colors[i]) & 255);
+                red = (char) Math.min(red * 2, 255);
+                green = (char) Math.min(green * 2, 255);
+                blue = (char) Math.min(blue * 2, 255);
+
+                colors[i] = alpha * (1 << 24) + red * (1 << 16) + green * (1 << 8) + blue;
+            }
+        }
+
         public MyImage bilinearSqueeze(int newWidth, int newHeight) {
-            int[] colors = new int[newWidth * newHeight];
+            int[] newColors = new int[newWidth * newHeight];
             double pixelOffsetY = (1.0D / newWidth) / 2.0D;
             double pixelOffsetX = (1.0D / newHeight) / 2.0D;
             for (int i = 0; i < newHeight; i++) {
                 for (int j = 0; j < newWidth; j++) {
-                    colors[i * newWidth + j] = getBilinearPixel(
+                    newColors[i * newWidth + j] = getBilinearPixel(
                             pixelOffsetX + (i * 1.0D) / newHeight,
                             pixelOffsetY + (j * 1.0D) / newWidth);
                 }
             }
-            return new MyImage(colors, newWidth, newHeight);
+
+            return new MyImage(newColors, newWidth, newHeight);
         }
 
-        public MyImage fastSqueeze(int newWidth, int newHeight) {
+        public MyImage naiveSqueeze(int newWidth, int newHeight) {
             int[] newColors = new int[newWidth * newHeight];
-
-            int YD = (height / newHeight) * width - width;
-            int YR = height % newHeight;
-            int XD = width / newWidth;
-            int XR = width % newWidth;
-            int outer = 0;
-            int inner = 0;
-
-            for (int y = newHeight, YE = 0; y > 0; y--) {
-                for (int x = newWidth, XE = 0; x > 0; x--) {
-                    newColors[outer++] = simpleColors[inner];
-                    inner += XD;
-                    XE += XR;
-                    if (XE >= newWidth) {
-                        XE -= newWidth;
-                        inner++;
-                    }
-                }
-                inner += YD;
-                YE += YR;
-                if (YE >= newHeight) {
-                    YE -= newHeight;
-                    inner += width;
+            for (int i = 0; i < newWidth; i++) {
+                for (int j = 0; j < newHeight; j++) {
+                    int x = (int) (i * width * 1.0F / newWidth);
+                    int y = (int) (j * height * 1.0F / newHeight);
+                    newColors[i + j * newWidth] = colors[x + y * width];
                 }
             }
             return new MyImage(newColors, newWidth, newHeight);
@@ -155,16 +149,16 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
 
         public MyImage rotate() {
             int[] newColors = new int[height * width];
-            for (int n = 0; n < height * width; n++) {
-                int i = n / height;
-                int j = height - 1 - n % height;
-                newColors[n] = simpleColors[width * j + i];
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
+                    newColors[i * height + j] = colors[width * (height - 1 - j) + i];
+                }
             }
             return new MyImage(newColors, height, width);
         }
 
         public Bitmap convertToBitmap() {
-            return Bitmap.createBitmap(simpleColors, width, height, Bitmap.Config.RGB_565);
+            return Bitmap.createBitmap(colors, width, height, Bitmap.Config.RGB_565);
         }
     }
 
@@ -177,21 +171,17 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 if (!tappedOnScreen) {
-                    Log.d("Touch", "Down!");
                     tappedOnScreen = true;
-                    if (x >= 0 && x < (toDraw.getWidth()) && y >= 800 &&
-                            y < (800 + toDraw.getHeight())) {
+                    if (x < toDraw.getWidth() && y < toDraw.getHeight()) {
                         fast = !fast;
                         drawerThread = new DrawerThread(R.drawable.source, getHolder());
                         drawerThread.start();
-                        Log.d("Touch", "Yep!");
                     }
                 }
                 break;
             case MotionEvent.ACTION_UP:
                 if (tappedOnScreen) {
                     tappedOnScreen = false;
-                    Log.d("Touch", "Up!");
                 }
                 break;
         }
@@ -214,29 +204,30 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
                 oldBitmap = BitmapFactory.decodeResource(getResources(), drawableId);
                 oldColors = new int[oldBitmap.getWidth() * oldBitmap.getHeight()];
                 oldBitmap.getPixels(oldColors, 0, oldBitmap.getWidth(), 0, 0, oldBitmap.getWidth(), oldBitmap.getHeight());
+                sourceImage = new MyImage(oldColors, oldBitmap.getWidth(), oldBitmap.getHeight()).rotate();
+                sourceImage.increaseBrightness();
             }
             if (fast) {
                 if (newFastBitmap == null) {
-                    MyImage image = new MyImage(oldColors, oldBitmap.getWidth(), oldBitmap.getHeight());
-                    MyImage fastConvertedImage = image.fastSqueeze((int) (oldBitmap.getWidth() /
-                            squeezing), (int) (oldBitmap.getHeight() / squeezing));
-                    newFastBitmap = fastConvertedImage.rotate().convertToBitmap();
+                    MyImage fastConvertedImage = sourceImage.naiveSqueeze((int) (
+                            oldBitmap.getWidth() / squeezing), (int) (oldBitmap.getHeight() /
+                            squeezing));
+                    newFastBitmap = fastConvertedImage.convertToBitmap();
                 }
                 toDraw = newFastBitmap;
             } else {
                 if (newBitmap == null) {
-                    MyImage image = new MyImage(oldColors, oldBitmap.getWidth(), oldBitmap.getHeight());
-                    MyImage convertedImage = image.bilinearSqueeze((int) (oldBitmap.getWidth() /
-                            squeezing), (int) (oldBitmap.getHeight() / squeezing));
-                    newBitmap = convertedImage.rotate().convertToBitmap();
+                    MyImage convertedImage = sourceImage.bilinearSqueeze((int) (
+                            oldBitmap.getWidth() / squeezing), (int) (oldBitmap.getHeight() /
+                            squeezing));
+                    newBitmap = convertedImage.convertToBitmap();
                 }
                 toDraw = newBitmap;
             }
             Canvas canvas = null;
             try {
                 canvas = holder.lockCanvas(null);
-                canvas.drawBitmap(oldBitmap, 0, 0, null);
-                canvas.drawBitmap(toDraw, 0, 800, null);
+                canvas.drawBitmap(toDraw, 0, 0, null);
             } catch (NullPointerException ignore) {
 
             } finally {
