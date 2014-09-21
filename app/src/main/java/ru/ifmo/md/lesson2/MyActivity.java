@@ -129,7 +129,7 @@ public class MyActivity extends Activity {
                 bb += Math.min(0xFF - bb, 50);
 
                 color = (rr << 16) + (gg << 8) + bb;
-                recolorMatrix[x + SOURCE_WIDTH * (SOURCE_HEIGHT - y - 1)] = color;
+                recolorMatrix[(SOURCE_WIDTH - x - 1) + SOURCE_WIDTH * (SOURCE_HEIGHT - y - 1)] = color;
             }
         }
     }
