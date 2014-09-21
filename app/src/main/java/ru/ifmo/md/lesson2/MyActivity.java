@@ -14,7 +14,7 @@ public class MyActivity extends Activity {
     public static final int SOURCE_WIDTH = 700;
     public static final int SOURCE_HEIGHT = 750;
     public static final double SCALE = (double) SOURCE_WIDTH / (double) WIDTH;
-    public static final double OPOSITE_SCALE = (double) WIDTH / (double) SOURCE_WIDTH;
+    public static final double OPPOSITE_SCALE = (double) WIDTH / (double) SOURCE_WIDTH;
 
     public static Bitmap resource;
 
@@ -86,8 +86,8 @@ public class MyActivity extends Activity {
 
         for (int i = 0; i < SOURCE_WIDTH; i++) {
             for (int j = 0; j < SOURCE_HEIGHT; j++) {
-                int x = (int) ((double) i * OPOSITE_SCALE);
-                int y = (int) ((double) j * OPOSITE_SCALE);
+                int x = (int) ((double) i * OPPOSITE_SCALE);
+                int y = (int) ((double) j * OPPOSITE_SCALE);
 
                 color = recolorMatrix[i + j * SOURCE_WIDTH];
                 rS = (color & 0xFF0000) >> 16;
