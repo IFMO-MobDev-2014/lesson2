@@ -70,11 +70,11 @@ public class RotateHelper {
             }
 
             for (int y = 0; y < height; y++) {
-                int newY = y * newW / width;
+                int newY = y * newH / height;
                 int newYW = newY * newW;
                 int yw = y * width;
                 for (int x = 0; x < width; x++) {
-                    int newX = x * newH / height;
+                    int newX = x * newW / width;
                     int color = pixels[yw + x];
                     int index = newYW + newX;
                     int r = (color >> 16) & 0xFF;
