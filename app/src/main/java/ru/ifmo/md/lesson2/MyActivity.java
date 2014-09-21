@@ -10,46 +10,52 @@ import android.os.Bundle;
 import android.view.View;
 
 public class MyActivity extends Activity {
-    private ImageView view;
-    private final int INITIAL_WIDTH = 750;
-    private final int INITIAL_HEIGHT = 700;
+    private int initialWidth = 750;
+    private int initialHeight = 700;
     private final int NEW_HEIGHT = 405;
     private final int NEW_WIDTH = 434;
-    public final float scale = INITIAL_WIDTH / NEW_WIDTH;
-    private int[] pixels = new int[INITIAL_WIDTH * INITIAL_HEIGHT];
-    private int[] rotated = new int[INITIAL_HEIGHT * INITIAL_WIDTH];
-    private int[] brightPixels = new int[INITIAL_HEIGHT * INITIAL_WIDTH];
+    public final float scale = 1.73f;
+    private int[] pixels = new int[initialWidth * initialHeight];
+    private int[] rotated = new int[initialHeight * initialWidth];
+    private int[] brightPixels = new int[initialHeight * initialWidth];
+    private int[] fastShrink = new int[NEW_WIDTH * NEW_HEIGHT];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         reconfigureImage();
-        view = new ImageView(this);
-        setContentView(view);
+        setContentView(new ImageView(this));
     }
 
     private void reconfigureImage() {
         Bitmap image = BitmapFactory.decodeResource(this.getResources(), R.drawable.source);
-        image.getPixels(pixels, 0, INITIAL_WIDTH, 0, 0, INITIAL_WIDTH, INITIAL_HEIGHT);
-        shrinkAndRotate();
-        brighten();
+        image.getPixels(pixels, 0, initialWidth, 0, 0, initialWidth, initialHeight);
+
+        nearestNeighbourInterpolation();
+        rotateAndBrighten();
     }
 
-
-    private void shrinkAndRotate() {
-        int index = 0;
-        for (int i = 0; i < INITIAL_WIDTH; i++) {
-            for (int j = INITIAL_HEIGHT - 1; j >= 0; j--) {
-                rotated[index++] = pixels[i + j * INITIAL_WIDTH];
+    private void nearestNeighbourInterpolation() {
+        for (int i = 0; i < NEW_WIDTH; i++) {
+            for (int j = 0; j < NEW_HEIGHT; j++) {
+                int y = (int) (j * scale);
+                int x = (int) (i * scale);
+                fastShrink[i + j * NEW_WIDTH] = pixels[y * initialWidth + x];
             }
         }
     }
 
-    private void brighten() {
-        for (int i = 0; i < INITIAL_WIDTH * INITIAL_HEIGHT; i++) {
-            int pixel = rotated[i];
-            brightPixels[i] = convertColor(pixel);
+    private void rotateAndBrighten() {
+        int index = 0;
+        for (int i = 0; i < initialWidth; i++) {
+            for (int j = initialHeight - 1; j >= 0; j--) {
+                rotated[index++] = pixels[i + j * initialWidth];
+                brightPixels[index - 1] = convertColor(pixels[i + j * initialWidth]);
+            }
         }
+        int tmp = initialHeight;
+        initialHeight = initialWidth;
+        initialWidth = tmp;
     }
 
     private int convertColor(int color) {
@@ -60,7 +66,8 @@ public class MyActivity extends Activity {
     }
 
     private class ImageView extends View {
-        private boolean isFast;
+
+        private boolean isBright;
 
         public ImageView(Context context) {
             super(context);
@@ -68,7 +75,7 @@ public class MyActivity extends Activity {
             this.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    isFast = !isFast;
+                    isBright = !isBright;
                     invalidate();
                 }
             });
@@ -76,10 +83,10 @@ public class MyActivity extends Activity {
 
         @Override
         protected void onDraw(Canvas canvas) {
-            if (isFast)
-                canvas.drawBitmap(rotated, 0, INITIAL_HEIGHT, 0, 0, INITIAL_HEIGHT, INITIAL_WIDTH, false, null);
+            if (isBright)
+                canvas.drawBitmap(fastShrink, 0, NEW_WIDTH, 0, 0, NEW_WIDTH, NEW_HEIGHT, false, null);
             else
-                canvas.drawBitmap(brightPixels, 0, INITIAL_HEIGHT, 0, 0, INITIAL_HEIGHT, INITIAL_WIDTH, false, null);
+                canvas.drawBitmap(pixels, 0, initialHeight, 0, 0, initialHeight, initialWidth, false, null);
         }
     }
 }
