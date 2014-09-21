@@ -19,7 +19,7 @@ public class DrawThread extends Thread {
     private boolean running = false;
     private SurfaceHolder surfaceHolder = null;
 
-    private Bitmap picture = null;
+    public Bitmap picture = null;
     private int width, height;
     private int [] pixels = null;
     private int [] smartCompressPixels = null;

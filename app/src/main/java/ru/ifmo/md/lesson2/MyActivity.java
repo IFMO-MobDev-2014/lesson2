@@ -23,7 +23,9 @@ public class MyActivity extends Activity implements View.OnTouchListener {
 
         switch (motionEvent.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                imageViewer.changeCompress();
+                if (imageViewer.checkOnPicture(x, y)) {
+                    imageViewer.changeCompress();
+                }
                 break;
         }
         return true;

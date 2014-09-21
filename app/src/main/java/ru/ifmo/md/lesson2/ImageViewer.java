@@ -38,4 +38,9 @@ public class ImageViewer extends SurfaceView implements SurfaceHolder.Callback {
     public void changeCompress() {
         drawThread.changeCompress();
     }
+
+    public boolean checkOnPicture(float x, float y) {
+        return x <= drawThread.picture.getWidth() &&
+               y <= drawThread.picture.getHeight();
+    }
 }
