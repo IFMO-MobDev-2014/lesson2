@@ -5,17 +5,19 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
+import static java.lang.StrictMath.round;
 
 public class MyActivity extends Activity {
 
     private final static int width = 700;
     private final static int height = 750;
     private final static double scale = 1.73;
-    private final static int nWidth = (int) (height / scale);
-    private final static int nHeight = (int) (width / scale);
+    private final static int nWidth = (int) round(height / scale);
+    private final static int nHeight = (int) round(width / scale);
 
     private boolean flag = false;
     private int[] pixels = new int[width * height];
@@ -23,7 +25,9 @@ public class MyActivity extends Activity {
     private int[] pixels3 = new int[nWidth * nHeight];
 
     private Bitmap bitmap = null;
+    private Bitmap bitmap3 = null;
 
+    private ImageView myImage = null;
 
     // reverse and increasing brightness
     public void revAndInc() {
@@ -76,25 +80,24 @@ public class MyActivity extends Activity {
         }
     }
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view);
 
         bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.source);
-        bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+
         bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
 
         revAndInc();
         slowScale();
 
-        Bitmap bitmap3 = Bitmap.createBitmap(nWidth, nHeight, Bitmap.Config.ARGB_8888);
+        bitmap3 = Bitmap.createBitmap(nWidth, nHeight, Bitmap.Config.ARGB_8888);
         bitmap3.setPixels(pixels3, 0, nWidth, 0, 0, nWidth, nHeight);
 
-        ImageView myImage = (ImageView) findViewById(R.id.imageView);
-        myImage.setImageBitmap(bitmap3);
+        myImage = (ImageView) findViewById(R.id.imageView);
 
+        myImage.setImageBitmap(bitmap3);
     }
 
     public void clickImage(View view) {
@@ -103,6 +106,7 @@ public class MyActivity extends Activity {
         } else {
             slowScale();
         }
+        myImage.setImageBitmap(bitmap3);
         flag = flag ^ true;
     }
 }
