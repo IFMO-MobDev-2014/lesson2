@@ -50,8 +50,8 @@ public class RotateActivity extends Activity {
             Canvas canvas = holder.lockCanvas();
             RotateHelper helper = new RotateHelper(source);
             helper.setScaleMode(scaleMode);
+            helper.scale(1.73f, 1.73f);
             helper.rotateCW90();
-            helper.scale(1.0f / 1.73f, 1.0f / 1.73f);
             helper.brighten(2.0f);
             rotateView.setSize(helper.getWidth(), helper.getHeight());
             rotateView.setPixels(helper.getPixels());
