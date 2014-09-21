@@ -8,7 +8,7 @@
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Holo.NoActionBar">
         <activity
-            android:name="ru.ifmo.md.lesson2.MyActivity"
+            android:name=".RotateActivity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

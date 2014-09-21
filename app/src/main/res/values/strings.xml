@@ -2,5 +2,14 @@
 <resources>
 
     <string name="app_name">Lesson2</string>
+    <string name="title_activity_rotate">Rotate application</string>
+    <string name="button_text">Rotate, scale and brighten the picture</string>
+    <string name="dialog_scale_time">scale time</string>
+    <string name="dialog_rotate_time">rotate time</string>
+    <string name="dialog_brighten_time">brighten time</string>
+    <string name="dialog_ms">ms</string>
+    <string name="dialog_ok">OK</string>
+    <string name="scale_fast">fast scale</string>
+    <string name="scale_best">best scale</string>
 
 </resources>
