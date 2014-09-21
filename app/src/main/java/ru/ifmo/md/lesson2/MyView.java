@@ -43,69 +43,13 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
-    private static class Color {
-        private final int color;
-
-        private Color(int color) {
-            this.color = color;
-        }
-
-        private Color(char red, char green, char blue, char alpha) {
-            color = alpha * (1 << 24) + red * (1 << 16) + green * (1 << 8) + blue;
-        }
-
-        public char getRed() {
-            return (char) ((color >> 16) & 255);
-        }
-
-        public char getGreen() {
-            return (char) ((color >> 8) & 255);
-        }
-
-        public char getBlue() {
-            return (char) (color & 255);
-        }
-
-        public char getAlpha() {
-            return (char) ((color >> 24) & 255);
-        }
-
-        public int getColor() {
-            return color;
-        }
-
-        public static char changeContrast(char source, double contrast) {
-            double newSource = source;
-            newSource /= 255.0;
-            newSource -= 0.5;
-            newSource *= contrast;
-            newSource += 0.5;
-            newSource *= 255;
-
-            if (newSource < 0)
-                newSource = 0;
-            if (newSource > 255)
-                newSource = 255;
-            return (char) newSource;
-        }
-
-        public Color changeContrast(double contrast) {
-            return new Color(changeContrast(getRed(), contrast), changeContrast(getGreen(), contrast), changeContrast(getBlue(), contrast), changeContrast(getAlpha(), contrast));
-        }
-    }
-
-    private class Image {
-        private final Color[] colors;
+    private class MyImage {
         private final int[] simpleColors;
         private final int width;
         private final int height;
 
-        private Image(int[] colors, int width, int height) {
+        private MyImage(int[] colors, int width, int height) {
             simpleColors = colors;
-            this.colors = new Color[colors.length];
-            for (int i = 0; i < colors.length; i++) {
-                this.colors[i] = new Color(colors[i]);
-            }
             this.width = width;
             this.height = height;
             if (width * height != colors.length) {
@@ -113,8 +57,20 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
-        public Color getColor(int x, int y) {
-            return colors[x * width + y];
+        public char getRed(int x, int y) {
+            return (char) ((simpleColors[x * width + y] >> 16) & 255);
+        }
+
+        public char getGreen(int x, int y) {
+            return (char) ((simpleColors[x * width + y] >> 8) & 255);
+        }
+
+        public char getBlue(int x, int y) {
+            return (char) (simpleColors[x * width + y] & 255);
+        }
+
+        public char getAlpha(int x, int y) {
+            return (char) ((simpleColors[x * width + y] >> 24) & 255);
         }
 
         public int getBilinearPixel(double u, double v) {
@@ -127,25 +83,25 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
             double u_opposite = 1 - u_ratio;
             double v_opposite = 1 - v_ratio;
             char red = (char) (
-                    (getColor(x, y).getRed() * u_opposite + getColor(x + 1, y).getRed() * u_ratio) *
-                            v_opposite + (getColor(x, y + 1).getRed() * u_opposite +
-                            getColor(x + 1, y + 1).getRed() * u_ratio) * v_ratio);
-            char green = (char) ((getColor(x, y).getGreen() * u_opposite +
-                    getColor(x + 1, y).getGreen() * u_ratio) * v_opposite +
-                    (getColor(x, y + 1).getGreen() * u_opposite +
-                            getColor(x + 1, y + 1).getGreen() * u_ratio) * v_ratio);
-            char blue = (char) ((getColor(x, y).getBlue() * u_opposite +
-                    getColor(x + 1, y).getBlue() * u_ratio) * v_opposite +
-                    (getColor(x, y + 1).getBlue() * u_opposite +
-                            getColor(x + 1, y + 1).getBlue() * u_ratio) * v_ratio);
-            char alpha = (char) ((getColor(x, y).getAlpha() * u_opposite +
-                    getColor(x + 1, y).getAlpha() * u_ratio) * v_opposite +
-                    (getColor(x, y + 1).getAlpha() * u_opposite +
-                            getColor(x + 1, y + 1).getAlpha() * u_ratio) * v_ratio);
-            return new Color(red, green, blue, alpha).getColor();
+                    (getRed(x, y) * u_opposite + getRed(x + 1, y) * u_ratio) * v_opposite +
+                            (getRed(x, y + 1) * u_opposite + getRed(x + 1, y + 1) * u_ratio) *
+                                    v_ratio);
+            char green = (char) (
+                    (getGreen(x, y) * u_opposite + getGreen(x + 1, y) * u_ratio) * v_opposite +
+                            (getGreen(x, y + 1) * u_opposite + getGreen(x + 1, y + 1) * u_ratio) *
+                                    v_ratio);
+            char blue = (char) (
+                    (getBlue(x, y) * u_opposite + getBlue(x + 1, y) * u_ratio) * v_opposite +
+                            (getBlue(x, y + 1) * u_opposite + getBlue(x + 1, y + 1) * u_ratio) *
+                                    v_ratio);
+            char alpha = (char) (
+                    (getAlpha(x, y) * u_opposite + getAlpha(x + 1, y) * u_ratio) * v_opposite +
+                            (getAlpha(x, y + 1) * u_opposite + getAlpha(x + 1, y + 1) * u_ratio) *
+                                    v_ratio);
+            return alpha * (1 << 24) + red * (1 << 16) + green * (1 << 8) + blue;
         }
 
-        public Image bilinearSqueeze(int newWidth, int newHeight) {
+        public MyImage bilinearSqueeze(int newWidth, int newHeight) {
             int[] colors = new int[newWidth * newHeight];
             double pixelOffsetY = (1.0D / newWidth) / 2.0D;
             double pixelOffsetX = (1.0D / newHeight) / 2.0D;
@@ -156,29 +112,47 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
                             pixelOffsetY + (j * 1.0D) / newWidth);
                 }
             }
-            return new Image(colors, newWidth, newHeight);
+            return new MyImage(colors, newWidth, newHeight);
         }
 
-        public Image rotate() {
+        public MyImage fastSqueeze(int newWidth, int newHeight) {
+            int[] newColors = new int[newWidth * newHeight];
+
+            int YD = (height / newHeight) * width - width;
+            int YR = height % newHeight;
+            int XD = width / newWidth;
+            int XR = width % newWidth;
+            int outer = 0;
+            int inner = 0;
+
+            for (int y = newHeight, YE = 0; y > 0; y--) {
+                for (int x = newWidth, XE = 0; x > 0; x--) {
+                    newColors[outer++] = simpleColors[inner];
+                    inner += XD;
+                    XE += XR;
+                    if (XE >= newWidth) {
+                        XE -= newWidth;
+                        inner++;
+                    }
+                }
+                inner += YD;
+                YE += YR;
+                if (YE >= newHeight) {
+                    YE -= newHeight;
+                    inner += width;
+                }
+            }
+            return new MyImage(newColors, newWidth, newHeight);
+        }
+
+        public MyImage rotate() {
             int[] newColors = new int[height * width];
-            for(int n = 0; n < height * width; n++) {
+            for (int n = 0; n < height * width; n++) {
                 int i = n / height;
                 int j = height - 1 - n % height;
-                newColors[n] = colors[width * j + i].getColor();
+                newColors[n] = simpleColors[width * j + i];
             }
-            return new Image(newColors, height, width);
-        }
-
-        public Image changeContrast(double contrast) {
-            int[] newColors = new int[height * width];
-
-            contrast *= contrast;
-
-            for(int n = 0; n < height * width; n++) {
-                newColors[n] = colors[n].changeContrast(contrast).getColor();
-            }
-
-            return new Image(newColors, width, height);
+            return new MyImage(newColors, height, width);
         }
 
         public Bitmap convertToBitmap() {
@@ -197,18 +171,23 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
 
         @Override
         public void run() {
+            long startTime = System.nanoTime();
             Bitmap oldBitmap = BitmapFactory.decodeResource(getResources(), drawableId);
             int[] colors = new int[oldBitmap.getWidth() * oldBitmap.getHeight()];
             oldBitmap.getPixels(colors, 0, oldBitmap.getWidth(), 0, 0, oldBitmap.getWidth(), oldBitmap.getHeight());
-            Image image = new Image(colors, oldBitmap.getWidth(), oldBitmap.getHeight());
-            Image convertedImage = image.bilinearSqueeze((int) (oldBitmap.getWidth() /
+            MyImage image = new MyImage(colors, oldBitmap.getWidth(), oldBitmap.getHeight());
+            MyImage convertedImage = image.bilinearSqueeze((int) (oldBitmap.getWidth() /
                     squeezing), (int) (oldBitmap.getHeight() / squeezing));
-            Bitmap newBitmap = convertedImage.rotate().changeContrast(0.81D).convertToBitmap();
+            MyImage fastConvertedImage = image.fastSqueeze((int) (oldBitmap.getWidth() /
+                    squeezing), (int) (oldBitmap.getHeight() / squeezing));
+            Bitmap newBitmap = convertedImage.rotate().convertToBitmap();
+            Bitmap newFastBitmap = fastConvertedImage.rotate().convertToBitmap();
             Canvas canvas = null;
             try {
                 canvas = holder.lockCanvas(null);
                 canvas.drawBitmap(oldBitmap, 0, 0, null);
-                canvas.drawBitmap(newBitmap, 0, 800, null);
+                canvas.drawBitmap(newFastBitmap, 0, 800, null);
+                canvas.drawBitmap(newBitmap, 500, 800, null);
             } catch (NullPointerException ignore) {
 
             } finally {
@@ -216,6 +195,8 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
                     holder.unlockCanvasAndPost(canvas);
                 }
             }
+            long finishTime = System.nanoTime();
+            Log.d("TIME", Long.toString((finishTime - startTime) / 1000000L));
         }
     }
 }
