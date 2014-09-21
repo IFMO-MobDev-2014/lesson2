@@ -7,16 +7,18 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.TextView;
 
 public class RotateActivity extends Activity {
+
+    private RotateHelper helper;
     private RotateView rotateView;
     private TextView scaleModeView;
     private Bitmap source;
-
     private boolean scaleMode = false;
 
     @Override
@@ -32,49 +34,9 @@ public class RotateActivity extends Activity {
         toggleScaleMode();
     }
 
-    public void onDrawClick(View view) {
-        // draw initial picture
-        SurfaceHolder holder = rotateView.getHolder();
-        if (holder.getSurface().isValid()) {
-            Canvas canvas = holder.lockCanvas();
-            RotateHelper helper = new RotateHelper(source);
-            rotateView.setSize(helper.getWidth(), helper.getHeight());
-            rotateView.setPixels(helper.getPixels());
-            rotateView.drawIt(canvas);
-            holder.unlockCanvasAndPost(canvas);
-        }
-    }
-
     public void onRSBClick(View view) {
         // rotate, scale and brighten the picture
-        SurfaceHolder holder = rotateView.getHolder();
-        if (holder.getSurface().isValid()) {
-            Canvas canvas = holder.lockCanvas();
-            RotateHelper helper = new RotateHelper(source);
-            helper.setScaleMode(scaleMode);
-            helper.scale(1.73f, 1.73f);
-            helper.rotateCW90();
-            helper.brighten(2.0f);
-            rotateView.setSize(helper.getWidth(), helper.getHeight());
-            rotateView.setPixels(helper.getPixels());
-            rotateView.drawIt(canvas);
-            holder.unlockCanvasAndPost(canvas);
-
-            // display message box
-            AlertDialog ad = new AlertDialog.Builder(this).create();
-            ad.setCancelable(false);
-            String scaleTimeMsg = "scale time = " + helper.scaleTime + "ms";
-            String rotateTimeMsg = "rotate time = " + helper.rotateTime + "ms";
-            String brightenTimeMsg = "brighten time = " + helper.brightenTime + "ms";
-            ad.setMessage(scaleTimeMsg + "\n" + rotateTimeMsg + "\n" + brightenTimeMsg);
-            ad.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                }
-            });
-            ad.show();
-        }
+        new RotateTask().execute();
     }
 
     public void onImageClick(View view) {
@@ -89,6 +51,47 @@ public class RotateActivity extends Activity {
         } else {
             scaleModeView.setText("accurate scale");
             scaleModeView.setTextColor(Color.BLUE);
+        }
+    }
+
+    private class RotateTask extends AsyncTask<Void, Void, long[]> {
+        protected long[] doInBackground(Void... params) {
+            long[] times = new long[3];
+            SurfaceHolder holder = rotateView.getHolder();
+            if (holder.getSurface().isValid()) {
+                Canvas canvas = holder.lockCanvas();
+                helper = new RotateHelper(source);
+                helper.setScaleMode(scaleMode);
+                helper.scale(1.73f, 1.73f);
+                helper.rotateCW90();
+                helper.brighten(2.0f);
+                rotateView.setSize(helper.getWidth(), helper.getHeight());
+                rotateView.setPixels(helper.getPixels());
+                rotateView.drawIt(canvas);
+                holder.unlockCanvasAndPost(canvas);
+            }
+
+            times[0] = helper.scaleTime;
+            times[1] = helper.rotateTime;
+            times[2] = helper.brightenTime;
+            return times;
+        }
+
+        protected void onPostExecute(long[] times) {
+            // display message box
+            AlertDialog ad = new AlertDialog.Builder(RotateActivity.this).create();
+            ad.setCancelable(false);
+            String scaleTimeMsg = "scale time = " + times[0] + "ms";
+            String rotateTimeMsg = "rotate time = " + times[1] + "ms";
+            String brightenTimeMsg = "brighten time = " + times[2] + "ms";
+            ad.setMessage(scaleTimeMsg + "\n" + rotateTimeMsg + "\n" + brightenTimeMsg);
+            ad.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
+                }
+            });
+            ad.show();
         }
     }
 }

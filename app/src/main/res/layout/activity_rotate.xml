@@ -43,21 +43,10 @@
         android:layout_height="wrap_content"
         android:layout_alignEnd="@+id/scaleMode"
         android:layout_alignParentBottom="true"
-        android:layout_alignRight="@+id/scaleMode"
-        android:layout_toEndOf="@+id/drawButton"
-        android:layout_toRightOf="@+id/drawButton"
-        android:onClick="onRSBClick"
-        android:text="Draw, rotate, scale and brighten the cat" />
-
-    <Button
-        android:id="@+id/drawButton"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:onClick="onDrawClick"
-        android:text="Draw the cat" />
+        android:layout_alignRight="@+id/scaleMode"
+        android:onClick="onRSBClick"
+        android:text="Rotate, scale and brighten the picture" />
 
 </RelativeLayout>
