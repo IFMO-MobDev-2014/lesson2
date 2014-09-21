@@ -34,6 +34,7 @@ public class MyActivity extends Activity {
         bMap = Bitmap.createBitmap(intArrayNew, height, width,
                 Bitmap.Config.RGB_565);
 
+
         int[] arrResGood = resizeBilinear(intArrayNew, height, width, newHeight,
                 newWeight);
         int[] arrResQuick = resizePixels(intArrayNew, height, width, newHeight, newWeight);
