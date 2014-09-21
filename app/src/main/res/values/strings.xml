@@ -2,5 +2,7 @@
 <resources>
 
     <string name="app_name">Lesson2</string>
+    <string name="imageDescription">cat</string>
+    <string name="IDesc">someCuteCat</string>
 
 </resources>
