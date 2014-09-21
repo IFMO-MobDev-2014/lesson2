@@ -5,11 +5,19 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 public class MyView extends SurfaceView implements SurfaceHolder.Callback {
     private DrawerThread drawerThread;
+    private Bitmap newBitmap;
+    private Bitmap newFastBitmap;
+    private Bitmap oldBitmap;
+    private Bitmap toDraw;
+    private boolean tappedOnScreen = false;
+    private boolean fast = true;
+    private int[] oldColors;
     public static final double squeezing = 1.73D;
 
     public MyView(Context context) {
@@ -160,6 +168,36 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int action = event.getAction();
+        int x = (int) event.getX();
+        int y = (int) event.getY();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                if (!tappedOnScreen) {
+                    Log.d("Touch", "Down!");
+                    tappedOnScreen = true;
+                    if (x >= 0 && x < (toDraw.getWidth()) && y >= 800 &&
+                            y < (800 + toDraw.getHeight())) {
+                        fast = !fast;
+                        drawerThread = new DrawerThread(R.drawable.source, getHolder());
+                        drawerThread.start();
+                        Log.d("Touch", "Yep!");
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                if (tappedOnScreen) {
+                    tappedOnScreen = false;
+                    Log.d("Touch", "Up!");
+                }
+                break;
+        }
+        return true;
+    }
+
     private class DrawerThread extends Thread {
         private final int drawableId;
         private final SurfaceHolder holder;
@@ -172,22 +210,33 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         @Override
         public void run() {
             long startTime = System.nanoTime();
-            Bitmap oldBitmap = BitmapFactory.decodeResource(getResources(), drawableId);
-            int[] colors = new int[oldBitmap.getWidth() * oldBitmap.getHeight()];
-            oldBitmap.getPixels(colors, 0, oldBitmap.getWidth(), 0, 0, oldBitmap.getWidth(), oldBitmap.getHeight());
-            MyImage image = new MyImage(colors, oldBitmap.getWidth(), oldBitmap.getHeight());
-            MyImage convertedImage = image.bilinearSqueeze((int) (oldBitmap.getWidth() /
-                    squeezing), (int) (oldBitmap.getHeight() / squeezing));
-            MyImage fastConvertedImage = image.fastSqueeze((int) (oldBitmap.getWidth() /
-                    squeezing), (int) (oldBitmap.getHeight() / squeezing));
-            Bitmap newBitmap = convertedImage.rotate().convertToBitmap();
-            Bitmap newFastBitmap = fastConvertedImage.rotate().convertToBitmap();
+            if (oldColors == null) {
+                oldBitmap = BitmapFactory.decodeResource(getResources(), drawableId);
+                oldColors = new int[oldBitmap.getWidth() * oldBitmap.getHeight()];
+                oldBitmap.getPixels(oldColors, 0, oldBitmap.getWidth(), 0, 0, oldBitmap.getWidth(), oldBitmap.getHeight());
+            }
+            if (fast) {
+                if (newFastBitmap == null) {
+                    MyImage image = new MyImage(oldColors, oldBitmap.getWidth(), oldBitmap.getHeight());
+                    MyImage fastConvertedImage = image.fastSqueeze((int) (oldBitmap.getWidth() /
+                            squeezing), (int) (oldBitmap.getHeight() / squeezing));
+                    newFastBitmap = fastConvertedImage.rotate().convertToBitmap();
+                }
+                toDraw = newFastBitmap;
+            } else {
+                if (newBitmap == null) {
+                    MyImage image = new MyImage(oldColors, oldBitmap.getWidth(), oldBitmap.getHeight());
+                    MyImage convertedImage = image.bilinearSqueeze((int) (oldBitmap.getWidth() /
+                            squeezing), (int) (oldBitmap.getHeight() / squeezing));
+                    newBitmap = convertedImage.rotate().convertToBitmap();
+                }
+                toDraw = newBitmap;
+            }
             Canvas canvas = null;
             try {
                 canvas = holder.lockCanvas(null);
                 canvas.drawBitmap(oldBitmap, 0, 0, null);
-                canvas.drawBitmap(newFastBitmap, 0, 800, null);
-                canvas.drawBitmap(newBitmap, 500, 800, null);
+                canvas.drawBitmap(toDraw, 0, 800, null);
             } catch (NullPointerException ignore) {
 
             } finally {
