@@ -48,88 +48,55 @@ public class BitmapHandler {
         height = newHeight;
     }
 
-    private static int fA(int x, int y) {
-        return Color.alpha(colors[y * width + x]);
+    private static int getColor(int c, int k) {
+        if (k == 1)
+            return Color.red(c);
+        if (k == 2)
+            return Color.green(c);
+        if (k == 3)
+            return Color.blue(c);
+        if (k == 0)
+            return Color.alpha(c);
+        return 0;
     }
-    private static int fR(int x, int y) {
-        return Color.red(colors[y * width + x]);
+    public static double getValue(double[] p, double x) {
+        return p[1] + 0.5 * x*(p[2] - p[0] + x*(2.0*p[0] - 5.0*p[1] + 4.0*p[2] - p[3] + x*(3.0*(p[1] - p[2]) + p[3] - p[0])));
     }
-    private static int fG(int x, int y) {
-        return Color.green(colors[y * width + x]);
-    }
-    private static int fB(int x, int y) {
-        return Color.blue(colors[y * width + x]);
-    }
-
-
-
-    private static int interpolation(double x, double y) {
-
-        double tx = x;
-        double ty = y;
-        x = x - Math.floor(x);
-        y = y - Math.floor(y);
-        double b1 = (1.0/4)*(x-1)*(x-2)*(x+1)*(y-1)*(y-2)*(y+1);
-        double b2 = -(1.0/4)*(x)*(x-2)*(x+1)*(y-1)*(y-2)*(y+1);
-        double b3 = -(1.0/4)*(x - 1)*(x-2)*(x+1)*(y)*(y-2)*(y+1);
-        double b4 = (1.0/4)*(x)*(x-2)*(x+1)*(y)*(y-2)*(y+1);
-
-        double b5 = -(1.0/12)*(x)*(x-2)*(x-1)*(y-1)*(y-2)*(y+1);
-        double b6 = -(1.0/12)*(x+1)*(x-2)*(x-1)*(y-1)*(y-2)*(y);
-        double b7 = (1.0/12)*(x)*(x-2)*(x-1)*(y)*(y-2)*(y+1);
-        double b8 = (1.0/12)*(x)*(x-2)*(x+1)*(y-1)*(y-2)*(y);
-
-        double b9 = (1.0/12)*(x)*(x+1)*(x-1)*(y-1)*(y-2)*(y+1);
-        double b10 = (1.0/12)*(x+1)*(x-2)*(x-1)*(y-1)*(y)*(y+1);
-        double b11 = (1.0/36)*(x)*(x-2)*(x-1)*(y-1)*(y-2)*(y);
-        double b12 = -(1.0/12)*(x)*(x+1)*(x-1)*(y)*(y-2)*(y+1);
-
-        double b13 = -(1.0/12)*(x)*(x-2)*(x+1)*(y-1)*(y)*(y+1);
-        double b14 = -(1.0/36)*(x)*(x+1)*(x-1)*(y-1)*(y-2)*(y);
-        double b15 = -(1.0/36)*(x)*(x-2)*(x-1)*(y-1)*(y)*(y+1);
-        double b16 = (1.0/36)*(x)*(x+1)*(x-1)*(y-1)*(y)*(y+1);
-
-        int rx = (int)Math.round(tx);
-        int ry = (int)Math.round(ty);
-        int[] ax = new int[4];
-        int[] ay = new int[4];
-        int add = 0;
-        if (rx == 0)
-            add = 1;
-        for (int i = Math.min(width - 1, rx + 2 + add), cnt = 0; cnt < 4; ++cnt, --i) {
-            ax[4 - cnt - 1] = i;
-        }
-        if (ry == 0)
-            add = 1;
-        for (int i = Math.min(height - 1, ry + 2 + add), cnt = 0; cnt < 4; ++cnt, --i) {
-            ay[4 - cnt - 1] = i;
-        }
-        int A =  (int)Math.round(b1*fA(ax[1], ay[1]) + b2*fA(ax[1], ay[2]) + b3*fA(ax[2], ay[1]) + b4*fA(ax[2], ay[2]) + b5*fA(ax[1], ay[0]) + b6*fA(ax[0], ay[1]) +
-                b7*fA(ax[2], ay[0]) + b8*fA(ax[0], ay[2]) + b9*fA(ax[1], ay[3]) + b10*fA(ax[3], ay[1]) + b11*fA(ax[0], ay[0]) + b12*fA(ax[2], ay[3]) + b13*fA(ax[3], ay[2]) +
-                b14*fA(ax[0], ay[3]) + b15*fA(ax[3], ay[0]) + b16*fA(ax[3], ay[3]));
-
-        int R = (int)Math.round(b1*fR(ax[1], ay[1]) + b2*fR(ax[1], ay[2]) + b3*fR(ax[2], ay[1]) + b4*fR(ax[2], ay[2]) + b5*fR(ax[1], ay[0]) + b6*fR(ax[0], ay[1]) +
-                b7*fR(ax[2], ay[0]) + b8*fR(ax[0], ay[2]) + b9*fR(ax[1], ay[3]) + b10*fR(ax[3], ay[1]) + b11*fR(ax[0], ay[0]) + b12*fR(ax[2], ay[3]) + b13*fR(ax[3], ay[2]) +
-                b14*fR(ax[0], ay[3]) + b15*fR(ax[3], ay[0]) + b16*fR(ax[3], ay[3]));
-
-        int G = (int)Math.round(b1*fG(ax[1], ay[1]) + b2*fG(ax[1], ay[2]) + b3*fG(ax[2], ay[1]) + b4*fG(ax[2], ay[2]) + b5*fG(ax[1], ay[0]) + b6*fG(ax[0], ay[1]) +
-                b7*fG(ax[2], ay[0]) + b8*fG(ax[0], ay[2]) + b9*fG(ax[1], ay[3]) + b10*fG(ax[3], ay[1]) + b11*fG(ax[0], ay[0]) + b12*fG(ax[2], ay[3]) + b13*fG(ax[3], ay[2]) +
-                b14*fG(ax[0], ay[3]) + b15*fG(ax[3], ay[0]) + b16*fG(ax[3], ay[3]));
-
-        int B = (int)Math.round(b1*fB(ax[1], ay[1]) + b2*fB(ax[1], ay[2]) + b3*fB(ax[2], ay[1]) + b4*fB(ax[2], ay[2]) + b5*fB(ax[1], ay[0]) + b6*fB(ax[0], ay[1]) +
-                b7*fB(ax[2], ay[0]) + b8*fB(ax[0], ay[2]) + b9*fB(ax[1], ay[3]) + b10*fB(ax[3], ay[1]) + b11*fB(ax[0], ay[0]) + b12*fB(ax[2], ay[3]) + b13*fB(ax[3], ay[2]) +
-                b14*fB(ax[0], ay[3]) + b15*fB(ax[3], ay[0]) + b16*fB(ax[3], ay[3]));
-
-        return Color.argb(A, R, G, B);
+    static double[] arr;
+    public static double getValue(double[][] p, double x, double y) {
+        if (arr == null)
+            arr = new double[4];
+        arr[0] = getValue(p[0], y);
+        arr[1] = getValue(p[1], y);
+        arr[2] = getValue(p[2], y);
+        arr[3] = getValue(p[3], y);
+        return getValue(arr, x);
     }
 
     private static void qualityCompress() {
         int newWidth = (int)Math.round(width * 1.0 / k);
         int newHeight = (int)Math.round(height * 1.0 / k);
         int[] newColors = new int[newHeight * newWidth];
-        for (int y = 0; y < newHeight; y++) {
-            for (int x = 0; x < newWidth; x++) {
-                newColors[y * newWidth + x] = interpolation(k * x, k * y);
+        double[][] p = new double[4][4];
+        int[] c = new int[4];
+        for (int i = 0; i < newHeight; i++) {
+            for (int j = 0; j < newWidth; j++) {
+                int y = (int)(k * i);
+                int x = (int)(k * j);
+                double dx = k * j - x;
+                double dy = k * i - y;
+                for (int k = 0; k < 4; k++) {
+                    for (int ii = -1; ii < 3; ii++)
+                        for (int jj = -1; jj < 3; jj++) {
+                            int t = x + ii + (y + jj) * width;
+                            if (t > 0 && t < width * height)
+                                p[ii + 1][jj + 1] = getColor(colors[t], k);
+                            else
+                                p[ii + 1][jj + 1] = 0;
+                        }
+                    c[k] = (int)getValue(p, dx/10, dy/10);
+                }
+                newColors[i * newWidth + j] = Color.argb(c[0], c[1], c[2], c[3]);
             }
         }
         colors = newColors;
@@ -137,24 +104,7 @@ public class BitmapHandler {
         height = newHeight;
     }
 
-    private static int sqr(int a) {
-        return a * a;
-    }
-    private static int getLength(int a, int b) {
-        int x1 = 0, y1 = 0, z1 = 0, k1 = 0;
-        int x2 = 0, y2 = 0, z2 = 0, k2 = 0;
-        x1 = Color.alpha(a);
-        y1 = Color.red(a);
-        z1 = Color.green(a);
-        k1 = Color.blue(a);
 
-        x2 = Color.alpha(b);
-        y2 = Color.red(b);
-        z2 = Color.green(b);
-        k2 = Color.blue(b);
-
-        return (int)Math.round(Math.sqrt(sqr(x1 - x2) + sqr(y1 - y2) + sqr(z1 - z2) + sqr(k1 - k2)));
-    }
 
 
     private static void turn() {

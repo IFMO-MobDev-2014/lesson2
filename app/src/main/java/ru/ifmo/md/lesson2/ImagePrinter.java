@@ -77,6 +77,8 @@ public class ImagePrinter extends View {
         Bitmap image = isQuality ? qualityImage : fastImage;
         float x = ((float)getWidth() - image.getWidth()) / 2;
         float y = ((float)getHeight() - image.getHeight()) / 2;
+        canvas.scale(((float)getWidth()) / image.getWidth(), ((float)getHeight()) / image.getHeight());
+        x = 0; y = 0;
         canvas.drawBitmap(image, x, y, null);
     }
     public void resume() {
