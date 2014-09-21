@@ -1,6 +1,8 @@
 package ru.ifmo.md.lesson2;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -57,6 +59,21 @@ public class RotateActivity extends Activity {
             rotateView.setPixels(helper.getPixels());
             rotateView.drawIt(canvas);
             holder.unlockCanvasAndPost(canvas);
+
+            // display message box
+            AlertDialog ad = new AlertDialog.Builder(this).create();
+            ad.setCancelable(false);
+            String scaleTimeMsg = "scale time = " + helper.scaleTime + "ms";
+            String rotateTimeMsg = "rotate time = " + helper.rotateTime + "ms";
+            String brightenTimeMsg = "brighten time = " + helper.brightenTime + "ms";
+            ad.setMessage(scaleTimeMsg + "\n" + rotateTimeMsg + "\n" + brightenTimeMsg);
+            ad.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
+                }
+            });
+            ad.show();
         }
     }
 

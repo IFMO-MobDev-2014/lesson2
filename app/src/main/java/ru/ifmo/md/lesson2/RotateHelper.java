@@ -6,6 +6,9 @@ import android.graphics.Bitmap;
  * Created by anton on 20/09/14.
  */
 public class RotateHelper {
+    public long scaleTime;
+    public long rotateTime;
+    public long brightenTime;
     private int[] pixels;
     private int width;
     private int height;
@@ -19,6 +22,8 @@ public class RotateHelper {
     }
 
     public void rotateCW90() {
+        long startTime = System.currentTimeMillis();
+
         int[] newPixels = new int[width * height];
         for (int y = 0; y < height; y++) {
             int yw = y * width;
@@ -32,11 +37,16 @@ public class RotateHelper {
         width = height;
         height = tmp;
         pixels = newPixels;
+
+        long endTime = System.currentTimeMillis();
+        rotateTime = endTime - startTime;
     }
 
     // nearest neighbor for fast mode
     // superscaling for best mode
     public void scale(float scaleX, float scaleY) {
+        long startTime = System.currentTimeMillis();
+
         int newW = (int) (width / scaleX);
         int newH = (int) (height / scaleY);
         int[] newPixels = new int[newW * newH];
@@ -76,9 +86,14 @@ public class RotateHelper {
         width = newW;
         height = newH;
         pixels = newPixels;
+
+        long endTime = System.currentTimeMillis();
+        scaleTime = endTime - startTime;
     }
 
     public void brighten(float scale) {
+        long startTime = System.currentTimeMillis();
+
         // build brightening transform table
         int[] transformTable = new int[256];
         double coeff = Math.pow(255, (scale - 1) / scale);
@@ -94,6 +109,9 @@ public class RotateHelper {
             int blue = transformTable[color & 0xFF];
             pixels[i] = 0xFF000000 | red << 16 | green << 8 | blue;
         }
+
+        long endTime = System.currentTimeMillis();
+        brightenTime = endTime - startTime;
     }
 
     public void setScaleMode(boolean newMode) {
