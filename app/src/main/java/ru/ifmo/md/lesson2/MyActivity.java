@@ -105,12 +105,16 @@ public class MyActivity extends Activity {
                             int index = cx + srcWidth * cy;
                             if (index >= 0 && index < src.length) {
                                 grid[ii + 1][jj + 1] = getCol(pixels[index], k);
+
                             } else {
                                 grid[ii + 1][jj + 1] = 0;
                             }
                         }
                     }
-                    c[k] = (int)BicubicInterpolator.getValue(grid, 0.1f, 0.1f);
+                    int col = (int)BicubicInterpolator.getValue(grid, 0.57f, 0.57f);
+                    if (col < 0) col = 0;
+                    if (col > 255) col = 255;
+                    c[k] = col;
                 }
                 dst[i + dstWidth * j] = Color.rgb(c[0], c[1], c[2]);
             }
@@ -142,6 +146,7 @@ public class MyActivity extends Activity {
         @Override
         public void onDraw(Canvas canvas) {
             canvas.save();
+            canvas.scale(2.5f, 2.5f);
             if (state == 0) {
                 canvas.drawBitmap(fastPixels, 0, DST_WIDTH, 0, 0, DST_WIDTH, DST_HEIGHT, false, null);
             } else {
