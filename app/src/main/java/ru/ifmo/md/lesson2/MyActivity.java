@@ -51,6 +51,16 @@ public class MyActivity extends Activity {
             System.arraycopy(temppic,0,pic,0,h*w);
         }
 
+        void compressPicFast(int[] pic) {
+            int [] temppic = new int[New_Width*New_Height];
+            for (int i=0; i<New_Height; i++) {
+                for (int j=0; j<New_Width; j++) {
+                    temppic[i*New_Width+j] = pic[(i*(Height-1)/(New_Height-1))*Width + (j* (Width - 1)/(New_Width-1))];
+                }
+            }
+            System.arraycopy(temppic,0,newpicture,0,New_Height*New_Width);
+        }
+
 
 
 
