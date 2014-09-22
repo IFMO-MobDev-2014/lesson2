@@ -1,15 +1,15 @@
 package ru.ifmo.md.lesson2;
 
-import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ImageView;
 
 /**
  * Created by flyingleafe on 20.09.14.
+ * Applies 3 operations to image:
+ * resizing, rotation and brightening
  */
 class ProcessImageTask extends AsyncTask<Bitmap, Void, Void> {
     final ImageView view;
@@ -18,12 +18,10 @@ class ProcessImageTask extends AsyncTask<Bitmap, Void, Void> {
     int iheight;
     static final int rwidth = 405;
     static final int rheight = 434;
-    static final double resizeRate = 1.73;
     Bitmap resultImg;
     int[] bigPixels;
     int[] pixels = new int[rwidth * rheight];
     int[] pixelsRotated = new int[rwidth * rheight];
-    int[] edgeMask;
     float[] hsv = new float[3];
 
     ProcessImageTask(ImageView view, boolean hq) {
@@ -100,7 +98,6 @@ class ProcessImageTask extends AsyncTask<Bitmap, Void, Void> {
         bp[0].getPixels(bigPixels, 0, iwidth, 0, 0, iwidth, iheight);
         long startTime = System.currentTimeMillis();
         if (hq) {
-            edgeMask = new int[iwidth * iheight];
             resizeHQ();
             Log.i("QUALITY", "High");
         } else {

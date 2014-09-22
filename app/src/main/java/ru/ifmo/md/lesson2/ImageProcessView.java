@@ -7,6 +7,7 @@ import android.widget.ImageView;
 
 /**
  * Created by flyingleafe on 20.09.14.
+ * Listens for onTouch event and executes ProcessImageTask
  */
 public class ImageProcessView extends ImageView {
     boolean hq = false;
