@@ -60,12 +60,12 @@ public class ImageMagic extends SurfaceView implements Runnable{
     private void initImage(boolean fine) {
         if (fine) {
             if (fineResized == null)
-                fineResized = reduceImageFine(img, targetWidth, targetHeight);
+                fineResized = reduceImageFineRot90(img, targetWidth, targetHeight);
             current = fineResized;
         }
         else {
             if (fastResized == null)
-                fastResized = reduceImageFast(img, targetWidth, targetHeight);
+                fastResized = reduceImageFastRot90(img, targetWidth, targetHeight);
             current = fastResized;
         }
         Toast t;
@@ -105,7 +105,7 @@ public class ImageMagic extends SurfaceView implements Runnable{
     }
 
     // nearest neighbor
-    private Bitmap reduceImageFast(Bitmap source, final int newWidth, final int newHeight) {
+    private Bitmap reduceImageFastRot90(Bitmap source, final int newWidth, final int newHeight) {
         final int[] dx = {0, 1, 0, 1},
                 dy = {0, 0, 1, 1};
         final int N = 4;
@@ -127,7 +127,7 @@ public class ImageMagic extends SurfaceView implements Runnable{
                         offset = (int)Math.ceil((height - 1) * y / newHeight) * width;
                         for (int x = (newWidth >> 1) * dx[finalI]; x < (newWidth >> 1) * (dx[finalI] + 1); x++) {
                             oldX = (int)Math.ceil((width - 1) * x / newWidth);
-                            newRaw[y * newWidth + x] = raw[offset + oldX];
+                            newRaw[x * newHeight + (newHeight - y - 1)] = raw[offset + oldX];
                         }
                     }
                 }
@@ -144,11 +144,11 @@ public class ImageMagic extends SurfaceView implements Runnable{
             }
         }
 
-        return Bitmap.createBitmap(newRaw, newWidth, newHeight, Bitmap.Config.ARGB_8888);
+        return Bitmap.createBitmap(newRaw, newHeight, newWidth, Bitmap.Config.ARGB_8888);
     }
 
     // bilinear interpolation
-    public Bitmap reduceImageFine(Bitmap source, final int newWidth, final int newHeight) {
+    public Bitmap reduceImageFineRot90(Bitmap source, final int newWidth, final int newHeight) {
         final int[] dx = {0, 1, 0, 1},
                 dy = {0, 0, 1, 1};
         final int N = 4;
@@ -172,7 +172,7 @@ public class ImageMagic extends SurfaceView implements Runnable{
                     for (int i = dy[finalK] * (newHeight >> 1); i < (dy[finalK] + 1) * (newHeight >> 1); i++) {
                         y = (int) (y_ratio * i);
                         y_diff = (y_ratio * i) - y;
-                        for (int j = dx[finalK] * (newHeight >> 1); j < (dx[finalK] + 1) * (newWidth >> 1); j++) {
+                        for (int j = dx[finalK] * (newWidth >> 1); j < (dx[finalK] + 1) * (newWidth >> 1); j++) {
                             x = (int) (x_ratio * j);
                             x_diff = (x_ratio * j) - x;
                             index = (y * width + x);
@@ -193,7 +193,7 @@ public class ImageMagic extends SurfaceView implements Runnable{
                             red = ((a >> 16) & 0xff) * (1 - x_diff) * (1 - y_diff) + ((b >> 16) & 0xff) * (x_diff) * (1 - y_diff) +
                                     ((c >> 16) & 0xff) * (y_diff) * (1 - x_diff) + ((d >> 16) & 0xff) * (x_diff * y_diff);
 
-                            newRaw[i * newWidth + j] = 0xff000000 | ((int) red << 16) | ((int) green << 8) | (int) blue;
+                            newRaw[j * newHeight + (newHeight - i - 1)] = 0xff000000 | ((int) red << 16) | ((int) green << 8) | (int) blue;
                         }
                     }
                 }
@@ -210,6 +210,6 @@ public class ImageMagic extends SurfaceView implements Runnable{
             }
         }
 
-        return Bitmap.createBitmap(newRaw, newWidth, newHeight, Bitmap.Config.ARGB_8888);
+        return Bitmap.createBitmap(newRaw, newHeight, newWidth, Bitmap.Config.ARGB_8888);
     }
 }
