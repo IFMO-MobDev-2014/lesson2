@@ -88,7 +88,7 @@ public class BitmapHandler {
                         double s = (intersect((x + ii), (x + ii) + 1, dx, dx + 1) *
                                 intersect((y + jj), (y + jj) + 1, dy, dy + 1));
                         for (int col = 0; col < 4; col++) {
-                            c[col] += (int)(s * getColor(x + ii, y + jj, col));
+                            c[col] += (s * getColor(x + ii, y + jj, col));
                         }
                     }
                 }

@@ -39,7 +39,7 @@ public class ImagePrinter extends View {
             while (isRunning) {
                while (!interrupted()) {
                     try {
-                        sleep(1000);
+                        sleep(500);
                     } catch (InterruptedException e) {break;}
                 }
                 synchronized (printer) {
