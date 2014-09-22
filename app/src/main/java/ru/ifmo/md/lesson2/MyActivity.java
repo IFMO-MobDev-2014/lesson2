@@ -20,6 +20,8 @@ public class MyActivity extends Activity {
     int[] temporaryColors = new int[width * height];
     int[] fastCompressedColors = new int[newWidth * newHeight];
     int[] highQualityCompressedColors = new int[newWidth * newHeight];
+    int[] countPixels = new int[newWidth * newHeight];
+    int[][] palette = new int[newWidth * newHeight][4]; // 0 - alpha, 1 - red, 2 - green, 3 - blue
     boolean hasAlpha = true;
     boolean change = false;
     ImageView imageView;
@@ -40,13 +42,13 @@ public class MyActivity extends Activity {
     private void decodeImage() {
         bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.source);
         bitmap.getPixels(colors, 0, width, 0, 0, width, height);
-    }
 
-    private void makeImageBrighter() {
         if (bitmap.getConfig() == Bitmap.Config.ARGB_8888) {
             hasAlpha = true;
         }
+    }
 
+    private void makeImageBrighter() {
         for (int i = 0; i < colors.length; i++) {
 
             int alpha = hasAlpha ? (colors[i] & 0xFF000000) : 0;
@@ -66,7 +68,7 @@ public class MyActivity extends Activity {
             }
 
 
-            colors[i] = (alpha << 24) + (red << 16) + (green << 8) + blue;
+            colors[i] = (hasAlpha ? (alpha << 24) : 0) + (red << 16) + (green << 8) + blue;
         }
     }
 
@@ -90,29 +92,44 @@ public class MyActivity extends Activity {
         fastBitmap = Bitmap.createBitmap(fastCompressedColors, newHeight, newWidth, bitmap.getConfig());
     }
 
-    /*
     private void highQualityCompressor() {
-        System.arraycopy(newColors, 0, highQualityCompressedColors, 0, newWidth * newHeight);
+        for (int i = 0; i < countPixels.length; i++) {
+            countPixels[i] = 0;
+
+            for (int c = 0; c < 4; c++) {
+                palette[i][c] = 0;
+            }
+        }
+
+        for (int j = 0; j < width; j++) {
+            for (int i = 0; i < height; i++) {
+                int iNew = (int) (i * ((double) (newHeight - 1) / (double) (height - 1)));
+                int jNew = (int) (j * ((double) (newWidth - 1) / (double) (width - 1)));
+                int currentColor = colors[j * height + i];
+                palette[jNew * newHeight + iNew][0] += (hasAlpha ? ((currentColor & 0xFF000000) >> 24) : 0);
+                palette[jNew * newHeight + iNew][1] += (currentColor & 0xFF0000) >> 16;
+                palette[jNew * newHeight + iNew][2] += (currentColor & 0xFF00) >> 8;
+                palette[jNew * newHeight + iNew][3] += currentColor & 0xFF;
+                countPixels[jNew * newHeight + iNew]++;
+            }
+        }
 
         for (int j = 0; j < newWidth; j++) {
             for (int i = 0; i < newHeight; i++) {
-                int x = i * (height - 1) / (newHeight - 1);
-                int y = j * (width - 1) / (newWidth - 1) * height;
+                int divider = Math.max(countPixels[j * newHeight + i], 1);
 
-                for (int di = -1; di < 2; di++) {
-                    for (int dj = -1; dj < 2; dj++) {
-
-                    }
+                for (int c = 0; c < 4; c++) {
+                    palette[j * newHeight + i][c] /= divider;
                 }
+
+                int alpha = palette[j * newHeight + i][0];
+                int red = palette[j * newHeight + i][1];
+                int green = palette[j * newHeight + i][2];
+                int blue = palette[j * newHeight + i][3];
+                highQualityCompressedColors[j * newHeight + i] = (hasAlpha ? (alpha << 24) : 0) + (red << 16) + (green << 8) + blue;
             }
         }
-    }
-    */
 
-    private void highQualityCompressor() {
-        for (int i = 0; i < highQualityCompressedColors.length; i++) {
-            highQualityCompressedColors[i] = 0xFFFFFFFF;
-        }
         highQualityBitmap = Bitmap.createBitmap(highQualityCompressedColors, newHeight, newWidth, bitmap.getConfig());
     }
 
