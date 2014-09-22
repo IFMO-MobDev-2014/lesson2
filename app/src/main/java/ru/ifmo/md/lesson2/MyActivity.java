@@ -10,15 +10,16 @@ import android.os.Bundle;
 import android.view.View;
 
 public class MyActivity extends Activity {
-    private int initialWidth = 750;
-    private int initialHeight = 700;
-    private final int NEW_HEIGHT = 405;
-    private final int NEW_WIDTH = 434;
-    public final float scale = 1.73f;
-    private int[] pixels = new int[initialWidth * initialHeight];
-    private int[] rotated = new int[initialHeight * initialWidth];
-    private int[] brightPixels = new int[initialHeight * initialWidth];
-    private int[] fastShrink = new int[NEW_WIDTH * NEW_HEIGHT];
+    private boolean isFast = true;
+
+    private static final int initialWidth = 750;
+    private static final int initialHeight = 700;
+    private int newWidth = 434;
+    private int newHeight = 405;
+    public static final float scaleFactor = 1.73f;
+    private int[] pixels = new int[initialHeight * initialWidth];
+    private int[] lowQualityPixels = new int[newWidth * newHeight];
+    private int[] highQualityPixels = new int[newWidth * newHeight];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,33 +30,84 @@ public class MyActivity extends Activity {
 
     private void reconfigureImage() {
         Bitmap image = BitmapFactory.decodeResource(this.getResources(), R.drawable.source);
+        image = Bitmap.createScaledBitmap(image, initialWidth, initialHeight, true);
         image.getPixels(pixels, 0, initialWidth, 0, 0, initialWidth, initialHeight);
-
+        image.recycle();
         nearestNeighbourInterpolation();
+        bilinearInterpolation();
         rotateAndBrighten();
     }
 
+    private void bilinearInterpolation() {
+        int[] temp = new int[newWidth * newHeight];
+        int a, b, c, d, x, y, index;
+        float scaleX = ((initialWidth * 1f - 1)) / newWidth;
+        float scaleY = ((initialHeight * 1f - 1)) / newHeight;
+        float xDist, yDist, blue, red, green;
+        int offset = 0;
+        for (int i = 0; i < newHeight; i++) {
+            for (int j = 0; j < newWidth; j++) {
+                x = (int) (scaleX * j);
+                y = (int) (scaleY * i);
+                xDist = (scaleX * j) - x;
+                yDist = (scaleY * i) - y;
+                index = (y * initialWidth + x);
+                a = pixels[index];
+                b = pixels[index + 1];
+                c = pixels[index + initialWidth];
+                d = pixels[index + initialWidth + 1];
+
+                // blue element
+                // Yb = Ab(1-w)(1-h) + Bb(w)(1-h) + Cb(h)(1-w) + Db(wh)
+                blue = Color.blue(a) * (1 - xDist) * (1 - yDist) + Color.blue(b) * (xDist) * (1 - yDist) +
+                        Color.blue(c) * (yDist) * (1 - xDist) + Color.blue(d) * (xDist * yDist);
+
+                // green element
+                // Yg = Ag(1-w)(1-h) + Bg(w)(1-h) + Cg(h)(1-w) + Dg(wh)
+                green = Color.green(a) * (1 - xDist) * (1 - yDist) + Color.green(b) * (xDist) * (1 - yDist) +
+                        Color.green(c) * (yDist) * (1 - xDist) + Color.green(d) * (xDist * yDist);
+
+                // red element
+                // Yr = Ar(1-w)(1-h) + Br(w)(1-h) + Cr(h)(1-w) + Dr(wh)
+                red = Color.red(a) * (1 - xDist) * (1 - yDist) + Color.red(b) * (xDist) * (1 - yDist) +
+                        Color.red(c) * (yDist) * (1 - xDist) + Color.red(d) * (xDist * yDist);
+
+                temp[offset++] =
+                        0xff000000 |
+                        ((((int) red) << 16) & 0xff0000) |
+                        ((((int) green) << 8) & 0xff00) |
+                        ((int) blue);
+            }
+        }
+        highQualityPixels = temp;
+    }
+
     private void nearestNeighbourInterpolation() {
-        for (int i = 0; i < NEW_WIDTH; i++) {
-            for (int j = 0; j < NEW_HEIGHT; j++) {
-                int y = (int) (j * scale);
-                int x = (int) (i * scale);
-                fastShrink[i + j * NEW_WIDTH] = pixels[y * initialWidth + x];
+        for (int i = 0; i < newWidth; i++) {
+            for (int j = 0; j < newHeight; j++) {
+                int y = (int) (j * scaleFactor);
+                int x = (int) (i * scaleFactor);
+                lowQualityPixels[i + j * newWidth] = pixels[y * initialWidth + x];
             }
         }
     }
 
     private void rotateAndBrighten() {
         int index = 0;
-        for (int i = 0; i < initialWidth; i++) {
-            for (int j = initialHeight - 1; j >= 0; j--) {
-                rotated[index++] = pixels[i + j * initialWidth];
-                brightPixels[index - 1] = convertColor(pixels[i + j * initialWidth]);
+        int[] brightPixels = new int[newWidth * newHeight];
+        int[] brightPixels2 = new int[newWidth * newHeight];
+        for (int i = 0; i < newWidth; i++) {
+            for (int j = newHeight - 1; j >= 0; j--) {
+                brightPixels[index++] = convertColor(lowQualityPixels[i + j * newWidth]);
+                brightPixels2[index - 1] = convertColor(highQualityPixels[i + j * newWidth]);
             }
         }
-        int tmp = initialHeight;
-        initialHeight = initialWidth;
-        initialWidth = tmp;
+        int tmp = newHeight;
+        newHeight = newWidth;
+        newWidth = tmp;
+
+        lowQualityPixels = brightPixels;
+        highQualityPixels = brightPixels2;
     }
 
     private int convertColor(int color) {
@@ -67,15 +119,13 @@ public class MyActivity extends Activity {
 
     private class ImageView extends View {
 
-        private boolean isBright;
-
         public ImageView(Context context) {
             super(context);
 
             this.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    isBright = !isBright;
+                    isFast = !isFast;
                     invalidate();
                 }
             });
@@ -83,10 +133,10 @@ public class MyActivity extends Activity {
 
         @Override
         protected void onDraw(Canvas canvas) {
-            if (isBright)
-                canvas.drawBitmap(fastShrink, 0, NEW_WIDTH, 0, 0, NEW_WIDTH, NEW_HEIGHT, false, null);
+            if (isFast)
+                canvas.drawBitmap(lowQualityPixels, 0, newWidth, 0, 0, newWidth, newHeight, false, null);
             else
-                canvas.drawBitmap(pixels, 0, initialHeight, 0, 0, initialHeight, initialWidth, false, null);
+                canvas.drawBitmap(highQualityPixels, 0, newWidth, 0, 0, newWidth, newHeight, false, null);
         }
     }
 }
