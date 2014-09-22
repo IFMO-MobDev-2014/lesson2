@@ -16,11 +16,12 @@ class ProcessImageTask extends AsyncTask<Bitmap, Void, Void> {
     final boolean hq;
     int iwidth;
     int iheight;
-    static final int rwidth = 405;
-    static final int rheight = 434;
+    int rwidth;
+    int rheight;
+    static final double resizeRate = 1.73;
     Bitmap resultImg;
-    int[] pixels = new int[rwidth * rheight];
-    int[] pixelsRotated = new int[rwidth * rheight];
+    int[] pixels;
+    int[] pixelsRotated;
     int[] bigPixels;
     int[] edgeMask;
 
@@ -112,7 +113,11 @@ class ProcessImageTask extends AsyncTask<Bitmap, Void, Void> {
     protected Void doInBackground(Bitmap... bp) {
         iwidth = bp[0].getWidth();
         iheight = bp[0].getHeight();
+        rwidth = (int) (iwidth / resizeRate);
+        rheight = (int) (iheight / resizeRate);
         bigPixels = new int[iwidth * iheight];
+        pixels = new int[rwidth * rheight];
+        pixelsRotated = new int[rwidth * rheight];
         bp[0].getPixels(bigPixels, 0, iwidth, 0, 0, iwidth, iheight);
         long startTime = System.currentTimeMillis();
         if (hq) {

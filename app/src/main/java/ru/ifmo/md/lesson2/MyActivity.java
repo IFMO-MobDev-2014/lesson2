@@ -16,7 +16,7 @@ public class MyActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bitmap initImg = BitmapFactory.decodeResource(getResources(), R.drawable.source);
+        Bitmap initImg = BitmapFactory.decodeResource(getResources(), R.drawable.source2);
         view = new ImageProcessView(this, initImg);
         setContentView(view);
         view.processImage();
