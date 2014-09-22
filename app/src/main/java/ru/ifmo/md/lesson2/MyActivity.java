@@ -1,11 +1,13 @@
 package ru.ifmo.md.lesson2;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,23 +19,30 @@ public class MyActivity extends Activity {
     private static final int SRC_HEIGHT = 700;
     private static final int DST_WIDTH = 434;
     private static final int DST_HEIGHT = 405;
+    private static final float scaleCoefX = 0.57f;
+    private static final float scaleCoefY = 0.57f;
 
+    private float scaleWidth = 0f;
+    private float scaleHeight = 0f;
+
+    private boolean imagesReady = false;
     private int[] qualityPixels = null;
     private int[] fastPixels = new int[SRC_WIDTH * SRC_WIDTH];
     private int[] pixels = new int[SRC_WIDTH * SRC_WIDTH];
-    private Bitmap bitmap;
+    private ScaleView scaleView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        prepareImages();
+        scaleView = new ScaleView(this);
+        setContentView(scaleView);
 
-        setContentView(new ScaleView(this));
+        new ScaleImagesTask(this).execute();
     }
 
     private void prepareImages() {
-        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.source);
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.source);
 
         for (int i = 0; i < SRC_HEIGHT; i++) {
             for (int j = 0; j < SRC_WIDTH; j++) {
@@ -110,7 +119,10 @@ public class MyActivity extends Activity {
                             }
                         }
                     }
-                    c[k] = (int)BicubicInterpolator.getValue(grid, 0.1f, 0.1f);
+                    int col = (int)BicubicInterpolator.getValue(grid, scaleCoefX, scaleCoefY);
+                    if (col < 0) col = 0;
+                    if (col > 255) col = 255;
+                    c[k] = col;
                 }
                 dst[i + dstWidth * j] = Color.rgb(c[0], c[1], c[2]);
             }
@@ -131,17 +143,28 @@ public class MyActivity extends Activity {
             this.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    state ^= 1;
-                    Log.d(TAG, "Clicked, current state: " + state);
-                    invalidate();
+                    changeState();
                 }
             });
 
         }
 
+        public void changeState() {
+            state ^= 1;
+            invalidate();
+        }
+
+        @Override
+        public void onSizeChanged(int w, int h, int oldW, int oldH) {
+            scaleWidth = (float)w / DST_WIDTH;
+            scaleHeight = (float)h / DST_HEIGHT;
+        }
+
         @Override
         public void onDraw(Canvas canvas) {
             canvas.save();
+            float sc = Math.min(scaleHeight, scaleWidth);
+            canvas.scale(sc, sc);
             if (state == 0) {
                 canvas.drawBitmap(fastPixels, 0, DST_WIDTH, 0, 0, DST_WIDTH, DST_HEIGHT, false, null);
             } else {
@@ -149,5 +172,35 @@ public class MyActivity extends Activity {
             }
             canvas.restore();
         }
+    }
+
+    private class ScaleImagesTask extends AsyncTask<Void, Void, Void> {
+
+        private ProgressDialog dialog;
+
+        public ScaleImagesTask(Activity activity) {
+            dialog = new ProgressDialog(activity);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog.setMessage("Preparing images.");
+            dialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(final Void success) {
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
+            scaleView.changeState();
+        }
+
+        @Override
+        protected Void doInBackground(final Void... args) {
+            prepareImages();
+            return null;
+        }
+
     }
 }
