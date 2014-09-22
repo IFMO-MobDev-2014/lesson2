@@ -78,7 +78,7 @@ public class MyActivity extends Activity {
             for (int j = 0; j < 4; j++) {
                 int x = (colors[i] >> (8 * j)) & 255;
                 if (j < 3) {
-                    x = Math.min((int)(x * 1.6 + 10), 255);
+                    x = Math.min((int)(x * 1.6 + 20), 255); // magic brightening by every component
                 }
                 res |= x << (8 * j);
             }
@@ -98,8 +98,8 @@ public class MyActivity extends Activity {
         h = o;
         brightening(colors);
 
-        int newW = (int)(w / scale + 1);
-        int newH = (int)(h / scale + 1);
+        int newW = (int)((w - 1) / scale + 1);
+        int newH = (int)((h - 1) / scale + 1);
         int[] newColors;
         newColors = compressSlow(colors, w, h, newW, newH, scale);
         bmp[0] = Bitmap.createBitmap(newColors, 0, newW, newW, newH, Bitmap.Config.ARGB_8888);
