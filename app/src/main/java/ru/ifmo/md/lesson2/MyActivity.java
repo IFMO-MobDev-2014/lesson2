@@ -11,10 +11,14 @@ public class MyActivity extends Activity {
 
     public static final int WIDTH = 405;
     public static final int HEIGHT = 434;
+    public static final int NEW_HEIGHT = 405;
+    public static final int NEW_WIDTH = 434;
     public static final int SOURCE_WIDTH = 700;
     public static final int SOURCE_HEIGHT = 750;
-    public static final double SCALE = (double) SOURCE_WIDTH / (double) WIDTH;
-    public static final double OPPOSITE_SCALE = (double) WIDTH / (double) SOURCE_WIDTH;
+    public static final int NEW_SOURCE_HEIGHT = 700;
+    public static final int NEW_SOURCE_WIDTH = 750;
+    public static final double SCALE = (double) SOURCE_HEIGHT / (double) HEIGHT;
+    public static final double OPPOSITE_SCALE = (double) HEIGHT / (double) SOURCE_HEIGHT;
     public static final int BRIGHTNESS_CHANGE = 50;
 
     public static Bitmap resource;
@@ -24,10 +28,10 @@ public class MyActivity extends Activity {
     public static int[] b = new int[WIDTH * HEIGHT];
     public static int[] n = new int[WIDTH * HEIGHT];
 
-    public static int[] matrix = new int[SOURCE_HEIGHT * SOURCE_WIDTH];
-    public static int[] recolorMatrix = new int[SOURCE_HEIGHT * SOURCE_WIDTH];
-    public static int[] slowMatrix = new int[HEIGHT * WIDTH];
-    public static int[] fastMatrix = new int[HEIGHT * WIDTH];
+    public static int[] matrix = new int[SOURCE_WIDTH * SOURCE_HEIGHT];
+    public static int[] recolorMatrix = new int[SOURCE_WIDTH * SOURCE_HEIGHT];
+    public static int[] slowMatrix = new int[WIDTH * HEIGHT];
+    public static int[] fastMatrix = new int[WIDTH * HEIGHT];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,8 +45,8 @@ public class MyActivity extends Activity {
         fastCompressInit();
         slowCompressInit();
 
-        final Bitmap compressFast = Bitmap.createBitmap(fastMatrix, HEIGHT, WIDTH, Bitmap.Config.RGB_565);
-        final Bitmap compressSlow = Bitmap.createBitmap(slowMatrix, HEIGHT, WIDTH, Bitmap.Config.RGB_565);
+        final Bitmap compressFast = Bitmap.createBitmap(fastMatrix, NEW_WIDTH, NEW_HEIGHT, Bitmap.Config.RGB_565);
+        final Bitmap compressSlow = Bitmap.createBitmap(slowMatrix, NEW_WIDTH, NEW_HEIGHT, Bitmap.Config.RGB_565);
 
         img.setImageBitmap(compressFast);
         View.OnClickListener l = new View.OnClickListener() {
@@ -62,12 +66,12 @@ public class MyActivity extends Activity {
     }
 
     public static void fastCompressInit() {
-        for (int x = 0; x < HEIGHT; x++) {
-            for (int y = 0; y < WIDTH; y++) {
+        for (int x = 0; x < NEW_WIDTH; x++) {
+            for (int y = 0; y < NEW_HEIGHT; y++) {
                 int x2 = (int) ((double) x * SCALE);
                 int y2 = (int) ((double) y * SCALE);
 
-                fastMatrix[x + HEIGHT * y] = recolorMatrix[x2 + SOURCE_HEIGHT * y2];
+                fastMatrix[x + NEW_WIDTH * y] = recolorMatrix[x2 + NEW_SOURCE_WIDTH * y2];
             }
         }
     }
@@ -78,7 +82,7 @@ public class MyActivity extends Activity {
 
     public static void slowCompressInit() {
         // in case of phone rotation process restarts, reinitialisation of arrays needed
-        for (int i = 0; i < HEIGHT * WIDTH; i++) {
+        for (int i = 0; i < NEW_WIDTH * NEW_HEIGHT; i++) {
             r[i] = 0;
             g[i] = 0;
             b[i] = 0;
@@ -86,25 +90,25 @@ public class MyActivity extends Activity {
 
         }
 
-        for (int i = 0; i < SOURCE_HEIGHT; i++) {
-            for (int j = 0; j < SOURCE_WIDTH; j++) {
+        for (int i = 0; i < NEW_SOURCE_WIDTH; i++) {
+            for (int j = 0; j < NEW_SOURCE_HEIGHT; j++) {
                 int x = (int) ((double) i * OPPOSITE_SCALE);
                 int y = (int) ((double) j * OPPOSITE_SCALE);
 
-                color = recolorMatrix[i + j * SOURCE_HEIGHT];
+                color = recolorMatrix[i + j * NEW_SOURCE_WIDTH];
                 rS = (color & 0xFF0000) >> 16;
                 gS = (color & 0x00FF00) >> 8;
                 bS = color & 0x0000FF;
 
-                r[x + HEIGHT * y] += rS;
-                g[x + HEIGHT * y] += gS;
-                b[x + HEIGHT * y] += bS;
-                n[x + HEIGHT * y]++;
+                r[x + NEW_WIDTH * y] += rS;
+                g[x + NEW_WIDTH * y] += gS;
+                b[x + NEW_WIDTH * y] += bS;
+                n[x + NEW_WIDTH * y]++;
 
             }
         }
 
-        for (int i = 0; i < WIDTH * HEIGHT; i++) {
+        for (int i = 0; i < NEW_HEIGHT * NEW_WIDTH; i++) {
             r[i] /= n[i];
             g[i] /= n[i];
             b[i] /= n[i];
@@ -131,7 +135,7 @@ public class MyActivity extends Activity {
                 bb += Math.min(0xFF - bb, BRIGHTNESS_CHANGE);
 
                 color = (rr << 16) + (gg << 8) + bb;
-                recolorMatrix[(SOURCE_HEIGHT - y - 1) + SOURCE_HEIGHT * x] = color;
+                recolorMatrix[(NEW_SOURCE_WIDTH - y - 1) + NEW_SOURCE_WIDTH * x] = color;
             }
         }
     }
