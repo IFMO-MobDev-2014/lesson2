@@ -16,14 +16,15 @@ class ProcessImageTask extends AsyncTask<Bitmap, Void, Void> {
     final boolean hq;
     int iwidth;
     int iheight;
-    int rwidth;
-    int rheight;
+    static final int rwidth = 405;
+    static final int rheight = 434;
     static final double resizeRate = 1.73;
     Bitmap resultImg;
-    int[] pixels;
-    int[] pixelsRotated;
     int[] bigPixels;
+    int[] pixels = new int[rwidth * rheight];
+    int[] pixelsRotated = new int[rwidth * rheight];
     int[] edgeMask;
+    float[] hsv = new float[3];
 
     ProcessImageTask(ImageView view, boolean hq) {
         super();
@@ -85,20 +86,9 @@ class ProcessImageTask extends AsyncTask<Bitmap, Void, Void> {
     private void brighten(int rate) {
         for (int i = 0; i < rheight * rwidth; ++i) {
             int pixel = pixelsRotated[i];
-            int R = Color.red(pixel);
-            int G = Color.green(pixel);
-            int B = Color.blue(pixel);
-
-            R *= rate;
-            if (R > 255) R = 255;
-
-            G *= rate;
-            if (G > 255) G = 255;
-
-            B *= rate;
-            if (B > 255) B = 255;
-
-            pixelsRotated[i] = Color.rgb(R, G, B);
+            Color.colorToHSV(pixel, hsv);
+            hsv[2] *= rate;
+            pixelsRotated[i] = Color.HSVToColor(hsv);
         }
     }
 
@@ -106,11 +96,7 @@ class ProcessImageTask extends AsyncTask<Bitmap, Void, Void> {
     protected Void doInBackground(Bitmap... bp) {
         iwidth = bp[0].getWidth();
         iheight = bp[0].getHeight();
-        rwidth = (int) (iwidth / resizeRate);
-        rheight = (int) (iheight / resizeRate);
         bigPixels = new int[iwidth * iheight];
-        pixels = new int[rwidth * rheight];
-        pixelsRotated = new int[rwidth * rheight];
         bp[0].getPixels(bigPixels, 0, iwidth, 0, 0, iwidth, iheight);
         long startTime = System.currentTimeMillis();
         if (hq) {
