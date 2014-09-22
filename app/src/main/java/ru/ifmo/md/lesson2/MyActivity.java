@@ -12,12 +12,12 @@ import android.view.View;
 public class MyActivity extends Activity {
     private boolean lowQuality = true;
 
-    private static final int initialWidth = 750;
-    private static final int initialHeight = 700;
+    private static final int INITIAL_WIDTH = 750;
+    private static final int INITIAL_HEIGHT = 700;
     private int newWidth = 434;
     private int newHeight = 405;
     private static final float scaleFactor = 1.73f;
-    private int[] pixels = new int[initialHeight * initialWidth];
+    private int[] pixels = new int[INITIAL_HEIGHT * INITIAL_WIDTH];
     private int[] lowQualityPixels = new int[newWidth * newHeight];
     private int[] highQualityPixels = new int[newWidth * newHeight];
 
@@ -30,8 +30,8 @@ public class MyActivity extends Activity {
 
     private void reconfigureImage() {
         Bitmap image = BitmapFactory.decodeResource(this.getResources(), R.drawable.source);
-        image = Bitmap.createScaledBitmap(image, initialWidth, initialHeight, true);
-        image.getPixels(pixels, 0, initialWidth, 0, 0, initialWidth, initialHeight);
+        image = Bitmap.createScaledBitmap(image, INITIAL_WIDTH, INITIAL_HEIGHT, true);
+        image.getPixels(pixels, 0, INITIAL_WIDTH, 0, 0, INITIAL_WIDTH, INITIAL_HEIGHT);
         image.recycle();
         nearestNeighbourInterpolation();
         bilinearInterpolation();
@@ -41,8 +41,8 @@ public class MyActivity extends Activity {
     private void bilinearInterpolation() {
         int[] tmp = new int[newWidth * newHeight];
         int a, b, c, d, x, y, index;
-        float scaleX = ((initialWidth * 1f - 1)) / newWidth;
-        float scaleY = ((initialHeight * 1f - 1)) / newHeight;
+        float scaleX = ((INITIAL_WIDTH * 1f - 1)) / newWidth;
+        float scaleY = ((INITIAL_HEIGHT * 1f - 1)) / newHeight;
         float xDist, yDist, blue, red, green;
         int offset = 0;
         for (int i = 0; i < newHeight; i++) {
@@ -51,11 +51,11 @@ public class MyActivity extends Activity {
                 y = (int) (scaleY * i);
                 xDist = (scaleX * j) - x;
                 yDist = (scaleY * i) - y;
-                index = (y * initialWidth + x);
+                index = (y * INITIAL_WIDTH + x);
                 a = pixels[index];
                 b = pixels[index + 1];
-                c = pixels[index + initialWidth];
-                d = pixels[index + initialWidth + 1];
+                c = pixels[index + INITIAL_WIDTH];
+                d = pixels[index + INITIAL_WIDTH + 1];
 
                 blue = Color.blue(a) * (1 - xDist) * (1 - yDist) + Color.blue(b) * (xDist) * (1 - yDist) +
                         Color.blue(c) * (yDist) * (1 - xDist) + Color.blue(d) * (xDist * yDist);
@@ -77,7 +77,7 @@ public class MyActivity extends Activity {
             for (int j = 0; j < newHeight; j++) {
                 int y = (int) (j * scaleFactor);
                 int x = (int) (i * scaleFactor);
-                lowQualityPixels[i + j * newWidth] = pixels[y * initialWidth + x];
+                lowQualityPixels[i + j * newWidth] = pixels[y * INITIAL_WIDTH + x];
             }
         }
     }
