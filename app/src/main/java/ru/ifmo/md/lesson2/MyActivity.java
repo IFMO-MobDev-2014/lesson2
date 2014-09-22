@@ -17,8 +17,10 @@ public class MyActivity extends Activity {
     Resources res;
     int hAfter = 405;
     int wAfter = 434;
+    double scale = 1.73;
 
-    int[] scaleF(int[] colors, int w, int h, double scale) {
+
+    int[] scaleF(int[] colors, int w, int h) {
         int res[] = new int[wAfter * hAfter];
         for (int k = 0; k < 4; k++) {
             for (int i = 0; i < h; i++) {
@@ -30,8 +32,9 @@ public class MyActivity extends Activity {
         return res;
     }
 
-    int[] scaleQ(int[] colors, int w, int h, double scale) {
-        //saw in habr, may not work, so may the God be with us
+    int[] scaleQ(int[] colors, int w, int h) {
+        //saw in habr, may not working, so may the God be with us
+        //upd: tested, work is correct
         int res[] = new int[wAfter * hAfter];
         int cnt[] = new int[wAfter * hAfter];
         int sum[] = new int[wAfter * hAfter];
@@ -91,10 +94,10 @@ public class MyActivity extends Activity {
         int[] brightenedPixels;
 
         if (WayOfZipping > 0) { //fast way
-            scaledPixels =  scaleF(pixelsBefore, wBefore, hBefore, 1.73);
+            scaledPixels =  scaleF(pixelsBefore, wBefore, hBefore);
         }
         else {      //better quality
-            scaledPixels =  scaleQ(pixelsBefore, wBefore, hBefore, 1.73);
+            scaledPixels =  scaleQ(pixelsBefore, wBefore, hBefore);
         }
 
         int rotatedPixels[] = rotateSimple(scaledPixels, wAfter, hAfter);
@@ -119,6 +122,7 @@ public class MyActivity extends Activity {
 
         final ImageView imgview = (ImageView)findViewById(R.id.img);
         final TextView scmodeTextView = (TextView)findViewById(R.id.scmodeTextView);
+        scmodeTextView.setText("fast scaling (tap the image to change");
         final Button startButton = (Button)findViewById(R.id.btnStart);
         final Button resetButton = (Button)findViewById(R.id.btnReset);
 
