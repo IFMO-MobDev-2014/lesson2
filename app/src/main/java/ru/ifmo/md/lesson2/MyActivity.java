@@ -10,13 +10,13 @@ import android.os.Bundle;
 import android.view.View;
 
 public class MyActivity extends Activity {
-    private boolean isFast = true;
+    private boolean lowQuality = true;
 
     private static final int initialWidth = 750;
     private static final int initialHeight = 700;
     private int newWidth = 434;
     private int newHeight = 405;
-    public static final float scaleFactor = 1.73f;
+    private static final float scaleFactor = 1.73f;
     private int[] pixels = new int[initialHeight * initialWidth];
     private int[] lowQualityPixels = new int[newWidth * newHeight];
     private int[] highQualityPixels = new int[newWidth * newHeight];
@@ -39,7 +39,7 @@ public class MyActivity extends Activity {
     }
 
     private void bilinearInterpolation() {
-        int[] temp = new int[newWidth * newHeight];
+        int[] tmp = new int[newWidth * newHeight];
         int a, b, c, d, x, y, index;
         float scaleX = ((initialWidth * 1f - 1)) / newWidth;
         float scaleY = ((initialHeight * 1f - 1)) / newHeight;
@@ -57,29 +57,19 @@ public class MyActivity extends Activity {
                 c = pixels[index + initialWidth];
                 d = pixels[index + initialWidth + 1];
 
-                // blue element
-                // Yb = Ab(1-w)(1-h) + Bb(w)(1-h) + Cb(h)(1-w) + Db(wh)
                 blue = Color.blue(a) * (1 - xDist) * (1 - yDist) + Color.blue(b) * (xDist) * (1 - yDist) +
                         Color.blue(c) * (yDist) * (1 - xDist) + Color.blue(d) * (xDist * yDist);
 
-                // green element
-                // Yg = Ag(1-w)(1-h) + Bg(w)(1-h) + Cg(h)(1-w) + Dg(wh)
                 green = Color.green(a) * (1 - xDist) * (1 - yDist) + Color.green(b) * (xDist) * (1 - yDist) +
                         Color.green(c) * (yDist) * (1 - xDist) + Color.green(d) * (xDist * yDist);
 
-                // red element
-                // Yr = Ar(1-w)(1-h) + Br(w)(1-h) + Cr(h)(1-w) + Dr(wh)
                 red = Color.red(a) * (1 - xDist) * (1 - yDist) + Color.red(b) * (xDist) * (1 - yDist) +
                         Color.red(c) * (yDist) * (1 - xDist) + Color.red(d) * (xDist * yDist);
 
-                temp[offset++] =
-                        0xff000000 |
-                        ((((int) red) << 16) & 0xff0000) |
-                        ((((int) green) << 8) & 0xff00) |
-                        ((int) blue);
+                tmp[offset++] = Color.rgb((int) red, (int) green, (int) blue);
             }
         }
-        highQualityPixels = temp;
+        highQualityPixels = tmp;
     }
 
     private void nearestNeighbourInterpolation() {
@@ -125,7 +115,7 @@ public class MyActivity extends Activity {
             this.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    isFast = !isFast;
+                    lowQuality = !lowQuality;
                     invalidate();
                 }
             });
@@ -133,7 +123,7 @@ public class MyActivity extends Activity {
 
         @Override
         protected void onDraw(Canvas canvas) {
-            if (isFast)
+            if (lowQuality)
                 canvas.drawBitmap(lowQualityPixels, 0, newWidth, 0, 0, newWidth, newHeight, false, null);
             else
                 canvas.drawBitmap(highQualityPixels, 0, newWidth, 0, 0, newWidth, newHeight, false, null);
