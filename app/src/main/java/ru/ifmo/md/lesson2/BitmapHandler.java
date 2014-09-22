@@ -27,8 +27,8 @@ public class BitmapHandler {
             fastCompress();
         else
             qualityCompress();
-        //turn();
-        increaseBrightness(50);
+        turn();
+        increaseBrightness(70);
         return Bitmap.createBitmap(colors, 0, width, width, height, Bitmap.Config.ARGB_8888);
     }
 
@@ -37,9 +37,13 @@ public class BitmapHandler {
         int newHeight = (int)Math.round(height * 1.0 / k);
         int[] newColors = new int[newHeight * newWidth];
         for (int y = 0; y < newHeight; y++) {
+            int oldY = (int)Math.round(y * k);
+            if (oldY >= height)
+                oldY = height - 1;
             for (int x = 0; x < newWidth; x++) {
                 int oldX = (int)Math.round(x * k);
-                int oldY = (int)Math.round(y * k);
+                if (oldX >= width)
+                    oldX = width - 1;
                 newColors[y * newWidth + x] = colors[oldY * width + oldX];
             }
         }
@@ -48,64 +52,53 @@ public class BitmapHandler {
         height = newHeight;
     }
 
-    private static int getColor(int c, int k) {
+    private static int getColor(int x, int y, int k) {
+        int c = y * width + x;
+        if (c >= width * height || c < 0)
+            return 0;
         if (k == 1)
-            return Color.red(c);
+            return Color.red(colors[c]);
         if (k == 2)
-            return Color.green(c);
+            return Color.green(colors[c]);
         if (k == 3)
-            return Color.blue(c);
+            return Color.blue(colors[c]);
         if (k == 0)
-            return Color.alpha(c);
+            return Color.alpha(colors[c]);
         return 0;
     }
-    public static double getValue(double[] p, double x) {
-        return p[1] + 0.5 * x*(p[2] - p[0] + x*(2.0*p[0] - 5.0*p[1] + 4.0*p[2] - p[3] + x*(3.0*(p[1] - p[2]) + p[3] - p[0])));
-    }
-    static double[] arr;
-    public static double getValue(double[][] p, double x, double y) {
-        if (arr == null)
-            arr = new double[4];
-        arr[0] = getValue(p[0], y);
-        arr[1] = getValue(p[1], y);
-        arr[2] = getValue(p[2], y);
-        arr[3] = getValue(p[3], y);
-        return getValue(arr, x);
+    static double intersect(double a, double b, double c, double d) {
+        return Math.max(Math.min(b, d) - Math.max(a, c), 0.0);
     }
 
     private static void qualityCompress() {
         int newWidth = (int)Math.round(width * 1.0 / k);
         int newHeight = (int)Math.round(height * 1.0 / k);
         int[] newColors = new int[newHeight * newWidth];
-        double[][] p = new double[4][4];
         int[] c = new int[4];
         for (int i = 0; i < newHeight; i++) {
+            double dy = k * i;
+            int y = (int)Math.floor(k * i);
             for (int j = 0; j < newWidth; j++) {
-                int y = (int)(k * i);
-                int x = (int)(k * j);
-                double dx = k * j - x;
-                double dy = k * i - y;
-                for (int k = 0; k < 4; k++) {
-                    for (int ii = -1; ii < 3; ii++)
-                        for (int jj = -1; jj < 3; jj++) {
-                            int t = x + ii + (y + jj) * width;
-                            if (t > 0 && t < width * height)
-                                p[ii + 1][jj + 1] = getColor(colors[t], k);
-                            else
-                                p[ii + 1][jj + 1] = 0;
+                double dx = k * j;
+                int x = (int)Math.floor(k * j);
+                for (int k = 0; k < 4; k++)
+                    c[k] = 0;
+                for (int ii = -1; ii < 2; ii++) {
+                    for (int jj = -1; jj < 2; jj++) {
+                        double s = (intersect((x + ii), (x + ii) + 1, dx, dx + 1) *
+                                intersect((y + jj), (y + jj) + 1, dy, dy + 1));
+                        for (int col = 0; col < 4; col++) {
+                            c[col] += (int)(s * getColor(x + ii, y + jj, col));
                         }
-                    c[k] = (int)getValue(p, dx/10, dy/10);
+                    }
                 }
-                newColors[i * newWidth + j] = Color.argb(c[0], c[1], c[2], c[3]);
+                newColors[i * newWidth + j] = Color.argb(c[0], c[1], c[2],c[3]);
             }
         }
         colors = newColors;
         width = newWidth;
         height = newHeight;
     }
-
-
-
 
     private static void turn() {
         int[] turnColors;
