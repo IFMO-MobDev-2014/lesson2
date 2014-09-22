@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -91,11 +90,6 @@ public class MyActivity extends Activity {
                 r[to] = min(r[to], data[from] & ((1 << cntBit) - 1));
                 g[to] = min(g[to], (data[from] >> cntBit) & ((1 << cntBit) - 1));
                 b[to] = min(b[to], (data[from] >> (cntBit * 2)) & ((1 << cntBit) - 1));
-//                cnt[to]++;
-//                r[to] += data[from] & ((1 << cntBit) - 1);
-//                g[to] += (data[from] >> cntBit) & ((1 << cntBit) - 1);
-//                b[to] += (data[from] >> (cntBit * 2)) & ((1 << cntBit) - 1);
-                //newData[j * W + i] = data[round(i * scale) + round(j * scale) * width];
             }
         for (int i = 0; i < W * H; i++) {
             r[i] = min((1 << cntBit) - 1, r[i] * 2);
@@ -123,87 +117,5 @@ public class MyActivity extends Activity {
         flag = !flag;
         check();
     }
-
-
-//    public Bitmap test() {
-//        Bitmap r = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888);
-//        for (int i = 0; i < W; i++)
-//            for (int j = 0; j < H; j++)
-//                r.setPixel(i, j, 0xFF008080);
-//        return r;
-//    }
-//    public void run() {
-//    myDraw(canvas, bitmap);
-//   }
-//
-//    public void run2() {
-//        while (running) {
-//            if (holder.getSurface().isValid()) {
-//                Canvas canvas = holder.lockCanvas();
-//                long t1 = System.nanoTime();
-//                Bitmap bitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.source);
-//                long t2 = System.nanoTime();
-//                bitmap = compression2(bitmap);
-//                long t3 = System.nanoTime();
-//                bitmap = rotate90_2(bitmap);
-//                long t4 = System.nanoTime();
-//                myDraw(canvas, bitmap);
-//                long t5 = System.nanoTime();
-//                holder.unlockCanvasAndPost(canvas);
-//
-//                Log.i("time decode: ", ": " + ((t2 - t1) / 1000000));
-//                Log.i("time comp: ", ": " + ((t3 - t2) / 1000000));
-//                Log.i("time rot: ", ": " + ((t4 - t3) / 1000000));
-//                Log.i("time draw: ", ": " + ((t5 - t4) / 1000000));
-//            }
-//        }
-//    }
-//
-//
-//    public Bitmap compression(Bitmap bitmap) {
-//        float scale = bitmap.getWidth() * 1f / W;
-//        Bitmap newBitmap = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888);
-//        for (int i = 0; i < W; i++)
-//            for (int j = 0; j < H; j++) {
-//                newBitmap.setPixel(i, j, bitmap.getPixel(round(i * scale), round(j * scale)));
-//            }
-//        return newBitmap;
-//    }
-//    public void myDraw(Canvas canvas, Bitmap bitmap) {
-//        int W = bitmap.getWidth();
-//        int H = bitmap.getHeight();
-//        Rect rect = new Rect(0, 0, W, H);
-//        canvas.drawBitmap(bitmap, null, rect, null);
-//    }//
-//    public Bitmap rotate90(Bitmap bitmap) {
-//        Bitmap newBitmap = Bitmap.createBitmap(H, W, Bitmap.Config.ARGB_8888);
-//        for (int i = 0; i < W; i++)
-//            for (int j = 0; j < H; j++) {
-//                int color = bitmap.getPixel(i, j);
-//
-//                for (int k = 0; k < 3; k++) {
-//                    int cntBit = 8;
-//                    int tmp = (color >> (k * cntBit)) & ((1 << cntBit) - 1);
-//                    color ^= tmp << (k * cntBit);
-//                    tmp = min((1 << cntBit) - 1, tmp * 2);
-//                    color ^= tmp << (k * cntBit);
-//                }
-//                newBitmap.setPixel(j, W - 1 - i, color);
-//
-//            }
-//        return newBitmap;
-//    }
-//    @Override
-//    public void onSizeChanged(int w, int h, int oldW, int oldH) {
-//        //W = w;
-//        //H = h;
-//        //width = 240;
-//        //height = 320;
-////        if (w > h) {
-////            int x = width;
-////            width = height;
-////            height = x;
-////        }
-//    }
 
 }
