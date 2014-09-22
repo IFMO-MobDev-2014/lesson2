@@ -35,8 +35,9 @@ public class PictureView extends View {
         int newY = 0;
         for (float oldY = 0; newY < newHeight; newY++, oldY += scale) {
             int newX = 0;
+            int row = (int) oldY * width;
             for (float colorsXFirstIndex = 0; newX < newWidth; newX++, colorsXFirstIndex += scale) {
-                int color = colorsFirst[(int) ((int) oldY * width + colorsXFirstIndex)];
+                int color = colorsFirst[(int) (row + colorsXFirstIndex)];
                 int b = Color.blue(color) * 2;
                 int r = Color.red(color) * 2;
                 int g = Color.green(color) * 2;
@@ -47,9 +48,10 @@ public class PictureView extends View {
         newY = 0;
         for (float oldY = 0; newY < newHeight; newY++, oldY += scale) {
             int newX = 0;
+            int row = (int) oldY * width;
             for (float oldX = 0; newX < newWidth; newX++, oldX += scale) {
-                int leftColor = colorsFirst[(int) ((int) oldY * width + oldX)];
-                int rightColor = colorsFirst[(int) ((int) oldY * width + oldX) + 1];
+                int leftColor = colorsFirst[(int) (row + oldX)];
+                int rightColor = colorsFirst[(int) (row + oldX) + 1];
                 float fracLeft = oldX - (int) (oldX);
                 float fracRight = 1 - fracLeft;
                 int b = 2 * (int) (fracLeft * Color.blue(leftColor) + fracRight * Color.blue(rightColor));
@@ -60,11 +62,13 @@ public class PictureView extends View {
         }
         int[] rotateGood = new int[newWidth * newHeight];
         int[] rotateFast = new int[newWidth * newHeight];
-        for (int y = 0; y < newHeight; y++)
+        for (int y = 0; y < newHeight; y++) {
+            int row = y * newWidth;
             for (int x = 0; x < newWidth; x++) {
-                rotateGood[newHeight * x + newHeight - y - 1] = colorsGood[y * newWidth + x];
-                rotateFast[newHeight * x + newHeight - y - 1] = colorsFast[y * newWidth + x];
+                rotateGood[newHeight * x + newHeight - y - 1] = colorsGood[row + x];
+                rotateFast[newHeight * x + newHeight - y - 1] = colorsFast[row + x];
             }
+        }
         int t = newHeight;
         newHeight = newWidth;
         newWidth = t;
