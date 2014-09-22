@@ -48,6 +48,7 @@ public class MyActivity extends Activity {
         }
     }
 
+    // If picture is rather dark, just double each color component, otherwise use gamma-correction with gamma = 2.0
     private void makeImageBrighter() {
         for (int i = 0; i < colors.length; i++) {
 
