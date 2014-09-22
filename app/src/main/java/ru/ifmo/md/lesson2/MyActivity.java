@@ -15,6 +15,7 @@ public class MyActivity extends Activity {
     public static final int SOURCE_HEIGHT = 750;
     public static final double SCALE = (double) SOURCE_WIDTH / (double) WIDTH;
     public static final double OPPOSITE_SCALE = (double) WIDTH / (double) SOURCE_WIDTH;
+    public static final int BRIGHTNESS_CHANGE = 50;
 
     public static Bitmap resource;
 
@@ -32,6 +33,7 @@ public class MyActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final ImageView img = new ImageView(getApplicationContext());
+        img.setScaleType(ImageView.ScaleType.CENTER);
 
         resource = BitmapFactory.decodeResource(getResources(), R.drawable.source);
         resource.getPixels(matrix, 0, SOURCE_WIDTH, 0, 0, SOURCE_WIDTH, SOURCE_HEIGHT);
@@ -124,9 +126,9 @@ public class MyActivity extends Activity {
                 gg = (color & 0x00FF00) >> 8;
                 bb = color & 0x0000FF;
 
-                rr += Math.min(0xFF - rr, 50);
-                gg += Math.min(0xFF - gg, 50);
-                bb += Math.min(0xFF - bb, 50);
+                rr += Math.min(0xFF - rr, BRIGHTNESS_CHANGE);
+                gg += Math.min(0xFF - gg, BRIGHTNESS_CHANGE);
+                bb += Math.min(0xFF - bb, BRIGHTNESS_CHANGE);
 
                 color = (rr << 16) + (gg << 8) + bb;
                 recolorMatrix[(SOURCE_WIDTH - x - 1) + SOURCE_WIDTH * (SOURCE_HEIGHT - y - 1)] = color;
