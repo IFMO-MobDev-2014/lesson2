@@ -42,13 +42,6 @@ class ProcessImageTask extends AsyncTask<Bitmap, Void, Void> {
         }
     }
 
-    private int colorNorm(int a) {
-        int r = Color.red(a);
-        int g = Color.green(a);
-        int b = Color.blue(a);
-        return (int) Math.sqrt(r * r + g * g + b * b);
-    }
-
     private void resizeHQ() {
         double rate = (double) iwidth / (double) rwidth;
         for (int x = 0; x < rwidth; x++) {
