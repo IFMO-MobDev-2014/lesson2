@@ -1,11 +1,11 @@
-apply plugin: 'com.android.application'
+apply plugin: 'android'
 
 android {
     compileSdkVersion 19
     buildToolsVersion "20.0.0"
 
     defaultConfig {
-        applicationId "ru.ifmo.md.lesson1"
+        applicationId "ru.ifmo.md.lesson2"
         minSdkVersion 15
         targetSdkVersion 19
         versionCode 1
