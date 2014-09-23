@@ -94,7 +94,7 @@ public class Edit {
 
         int[] newPixels = new int[newWidth * newHeight];
         int x, y, pos, a, b, c, d;
-        double diffX, diffY, red, green, blue;
+        double diffX, diffY, alpha, red, green, blue;
 
         for (int i = 0; i < newWidth; i++) {
             for (int j = 0; j < newHeight; j++) {
@@ -110,13 +110,15 @@ public class Edit {
                 c = pixels[pos + width];
                 d = pixels[pos + width + 1];
 
+                alpha = Color.alpha(a) * (1 - diffX) * (1 - diffY) + Color.alpha(b) * diffX * (1 - diffY) + Color.alpha(c) * (1 - diffX) * diffY + Color.alpha(d) * diffX * diffY;
+
                 red = Color.red(a) * (1 - diffX) * (1 - diffY) + Color.red(b) * diffX * (1 - diffY) + Color.red(c) * (1 - diffX) * diffY + Color.red(d) * diffX * diffY;
 
                 green = Color.green(a) * (1 - diffX) * (1 - diffY) + Color.green(b) * diffX * (1 - diffY) + Color.green(c) * (1 - diffX) * diffY + Color.green(d) * diffX * diffY;
 
                 blue = Color.blue(a) * (1 - diffX) * (1 - diffY) + Color.blue(b) * diffX * (1 - diffY) + Color.blue(c) * (1 - diffX) * diffY + Color.blue(d) * diffX * diffY;
 
-                newPixels[i + j * newWidth] = Color.argb(0xFF, (int) red, (int) green, (int) blue);
+                newPixels[i + j * newWidth] = Color.argb((int)alpha, (int)red, (int)green, (int)blue);
             }
         }
 
