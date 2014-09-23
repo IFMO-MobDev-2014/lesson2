@@ -11,7 +11,7 @@ public class MyActivity extends Activity {
 
     Bitmap bitmap, bitmap2;
     ImageView image;
-    boolean flag = false;
+    boolean flag = true;
     Edit new_bmp;
 
     @Override
@@ -23,18 +23,14 @@ public class MyActivity extends Activity {
         new_bmp = new Edit(bitmap);
 
         image = (ImageView) findViewById(R.id.test);
-
-        //image.setImageBitmap(new_bmp.getBitmap());
-
+        image.setImageBitmap(new_bmp.getBitmap());
     }
 
     public void clickImage(View view) {
         if (flag) {
-            image.setImageBitmap(bitmap);
-        }
-        else {
-            image.setImageBitmap(new_bmp.getBitmap());
+            image.setImageBitmap(new_bmp.nearestNeighbor());
         }
         flag = !flag;
+
     }
 }

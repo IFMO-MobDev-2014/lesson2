@@ -11,6 +11,7 @@ public class Edit {
     Bitmap bitmap, bitmap2;
     int width, height;
     int[] pixels;
+    double scale = 1.73;
 
     Edit(Bitmap bmp) {
         width = bmp.getWidth();
@@ -29,6 +30,11 @@ public class Edit {
                 bitmap2.setPixel(height - y - 1, x, bitmap.getPixel(x, y));
             }
         }
+        int k = width;
+        width = height;
+        height = k;
+
+        bitmap = Bitmap.createBitmap(bitmap2);
     }
 
     public void increaseBrightness() {
@@ -59,6 +65,28 @@ public class Edit {
         }
         bitmap = Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888);
     }
+
+
+    public Bitmap nearestNeighbor() {
+
+        int newWidth = (int) ((double)  width / scale);
+        int newHeight = (int) ((double) height / scale);
+
+
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        int[] newPixels = new int[newWidth*newHeight];
+        int pos;
+
+        for(int i = 0; i < newWidth; i++) {
+            for(int j = 0; j < newHeight; j++) {
+                pos = (int) (i * scale) + (int) (j * scale) * width;
+                newPixels[i + j * newWidth] = pixels[pos];
+            }
+        }
+        return Bitmap.createBitmap(newPixels, newWidth, newHeight, Bitmap.Config.ARGB_8888);
+    }
+
 
     public Bitmap getBitmap() {
         increaseBrightness();
