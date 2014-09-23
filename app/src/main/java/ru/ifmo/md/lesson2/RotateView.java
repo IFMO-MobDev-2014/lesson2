@@ -10,9 +10,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Toast;
 
-import java.nio.charset.Charset;
-
-/**
+/*
  * Created by pokrasko on 23.09.14.
  */
 public class RotateView extends SurfaceView implements View.OnClickListener {
@@ -191,7 +189,7 @@ public class RotateView extends SurfaceView implements View.OnClickListener {
         text += "\nTotal time: " + totalTime + " ms";
 
         int duration = Toast.LENGTH_SHORT;
-        toast = Toast.makeText(context, (CharSequence) text, duration);
+        toast = Toast.makeText(context, text, duration);
         toast.show();
     }
 }
