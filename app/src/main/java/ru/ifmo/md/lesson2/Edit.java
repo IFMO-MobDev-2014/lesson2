@@ -87,6 +87,42 @@ public class Edit {
         return Bitmap.createBitmap(newPixels, newWidth, newHeight, Bitmap.Config.ARGB_8888);
     }
 
+    public Bitmap bilinearInterpolation() {
+
+        int newWidth = (int) ((double) width / scale);
+        int newHeight = (int) ((double) height / scale);
+
+        int[] newPixels = new int[newWidth * newHeight];
+        int x, y, pos, a, b, c, d;
+        double diffX, diffY, red, green, blue;
+
+        for (int i = 0; i < newWidth; i++) {
+            for (int j = 0; j < newHeight; j++) {
+                x = (int) (scale * i);
+                y = (int) (scale * j);
+                diffX = scale * i - x;
+                diffY = scale * j - y;
+
+                pos = x + y * width;
+
+                a = pixels[pos];
+                b = pixels[pos + 1];
+                c = pixels[pos + width];
+                d = pixels[pos + width + 1];
+
+                red = Color.red(a) * (1 - diffX) * (1 - diffY) + Color.red(b) * diffX * (1 - diffY) + Color.red(c) * (1 - diffX) * diffY + Color.red(d) * diffX * diffY;
+
+                green = Color.green(a) * (1 - diffX) * (1 - diffY) + Color.green(b) * diffX * (1 - diffY) + Color.green(c) * (1 - diffX) * diffY + Color.green(d) * diffX * diffY;
+
+                blue = Color.blue(a) * (1 - diffX) * (1 - diffY) + Color.blue(b) * diffX * (1 - diffY) + Color.blue(c) * (1 - diffX) * diffY + Color.blue(d) * diffX * diffY;
+
+                newPixels[i + j * newWidth] = Color.argb(0xFF, (int) red, (int) green, (int) blue);
+            }
+        }
+
+        return Bitmap.createBitmap(newPixels, newWidth, newHeight, Bitmap.Config.ARGB_8888);
+    }
+
 
     public Bitmap getBitmap() {
         increaseBrightness();

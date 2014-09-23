@@ -9,7 +9,7 @@ import android.widget.ImageView;
 
 public class MyActivity extends Activity {
 
-    Bitmap bitmap, bitmap2;
+    Bitmap bitmap, bitmap1, bitmap2;
     ImageView image;
     boolean flag = true;
     Edit new_bmp;
@@ -24,11 +24,16 @@ public class MyActivity extends Activity {
 
         image = (ImageView) findViewById(R.id.test);
         image.setImageBitmap(new_bmp.getBitmap());
+        bitmap1 = Bitmap.createBitmap(new_bmp.nearestNeighbor());
+        bitmap2 = Bitmap.createBitmap(new_bmp.bilinearInterpolation());
     }
 
     public void clickImage(View view) {
         if (flag) {
-            image.setImageBitmap(new_bmp.nearestNeighbor());
+            image.setImageBitmap(bitmap1);
+        }
+        else {
+            image.setImageBitmap(bitmap2);
         }
         flag = !flag;
 
