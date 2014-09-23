@@ -22,7 +22,7 @@ public class MyActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        Bitmap realImage = BitmapFactory.decodeResource(getResources(), R.drawable.source);
+        Bitmap realImage = BitmapFactory.decodeResource(getResources(), R.drawable.source2);
         toChangeImages(setBright(rotate(toCompressImageGood(realImage))), setBright(rotate(toCompressImageFast(realImage))));
 //        toChangeImages(toCompressImageGood(realImage), toCompressImageFast(realImage));
     }
@@ -96,10 +96,8 @@ public class MyActivity extends Activity {
             public void onClick(View view) {
                 if (change) {
                     imgButton.setImageBitmap(img1);
-//                    imgButton.setImageResource(R.drawable.source);
                 } else {
                     imgButton.setImageBitmap(img2);
-//                    imgButton.setImageResource(R.drawable.photo3);
                 }
                 change = !change;
             }
