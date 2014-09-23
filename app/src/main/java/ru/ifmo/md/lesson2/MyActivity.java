@@ -10,16 +10,11 @@ import java.io.File;
 
 public class MyActivity extends Activity {
     private ImageMagic magic;
-    public static final String path = "/mnt/ext_sd/Magic.png";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        File imgFile = new File(path);
-        if (!imgFile.exists())
-            Log.d("ERROR", "File not found");
-        Bitmap img = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+        Bitmap img = BitmapFactory.decodeResource(getResources(), R.drawable.source);
 
         magic = new ImageMagic(this, img);
         setContentView(magic);

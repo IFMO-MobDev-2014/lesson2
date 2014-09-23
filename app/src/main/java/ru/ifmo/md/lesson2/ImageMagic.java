@@ -60,12 +60,12 @@ public class ImageMagic extends SurfaceView implements Runnable{
     private void initImage(boolean fine) {
         if (fine) {
             if (fineResized == null)
-                fineResized = reduceImageFineRot90(img, targetWidth, targetHeight);
+                fineResized = compressImageFineRot90(img, targetWidth, targetHeight);
             current = fineResized;
         }
         else {
             if (fastResized == null)
-                fastResized = reduceImageFastRot90(img, targetWidth, targetHeight);
+                fastResized = compressImageFastRot90(img, targetWidth, targetHeight);
             current = fastResized;
         }
         Toast t;
@@ -105,7 +105,7 @@ public class ImageMagic extends SurfaceView implements Runnable{
     }
 
     // nearest neighbor
-    private Bitmap reduceImageFastRot90(Bitmap source, final int newWidth, final int newHeight) {
+    private Bitmap compressImageFastRot90(Bitmap source, final int newWidth, final int newHeight) {
         final int[] dx = {0, 1, 0, 1},
                 dy = {0, 0, 1, 1};
         final int N = 4;
@@ -148,7 +148,7 @@ public class ImageMagic extends SurfaceView implements Runnable{
     }
 
     // bilinear interpolation
-    public Bitmap reduceImageFineRot90(Bitmap source, final int newWidth, final int newHeight) {
+    public Bitmap compressImageFineRot90(Bitmap source, final int newWidth, final int newHeight) {
         final int[] dx = {0, 1, 0, 1},
                 dy = {0, 0, 1, 1};
         final int N = 4;
