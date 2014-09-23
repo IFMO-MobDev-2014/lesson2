@@ -53,7 +53,17 @@ class Image extends SurfaceView implements Runnable{
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             fast = !fast;
-            run();
+            if (holder.getSurface().isValid()) {
+                canvas = holder.lockCanvas();
+                if (fast) {
+                    //Log.i("new mode:", " fast");
+                    draw(canvas, finalPixelsFast);
+                } else {
+                    //Log.i("new mode:", " slow");
+                    draw(canvas, finalPixelsSlow);
+                }
+                holder.unlockCanvasAndPost(canvas);
+            }
         }
         return true;
     }
