@@ -22,7 +22,7 @@ public class MyActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        Bitmap realImage = BitmapFactory.decodeResource(getResources(), R.drawable.source2);
+        Bitmap realImage = BitmapFactory.decodeResource(getResources(), R.drawable.source);
         toChangeImages(setBright(rotate(toCompressImageGood(realImage))), setBright(rotate(toCompressImageFast(realImage))));
 //        toChangeImages(toCompressImageGood(realImage), toCompressImageFast(realImage));
     }
