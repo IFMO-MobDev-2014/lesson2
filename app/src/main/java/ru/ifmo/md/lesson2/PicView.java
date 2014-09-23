@@ -36,9 +36,32 @@ public class PicView extends View {
         }
         img = tmp;
     }
+
+    public void upBrightness() {
+
+        int value;
+        int redv;
+        int greenv;
+        int bluev;
+
+        for (int i = 0; i < h; i++) {
+            for (int j = 0; j < w; j++) {
+                value = img[i * w + j];
+                redv = (value & 0xFF0000) >> 16;
+                greenv = (value & 0x00FF00) >> 8;
+                bluev = (value & 0x0000FF);
+                redv = Math.min(redv * 2, 255);
+                greenv = Math.min(greenv * 2, 255);
+                bluev = Math.min(bluev * 2, 255);
+                img[i * w + j] = (redv << 16) + (greenv << 8) + bluev;
+            }
+        }
+    }
+
     @Override
 
     public void onDraw(Canvas canvas) {
+        upBrightness();
         rotate();
         canvas.drawBitmap(img, 0, h, 0, 0, h, w, false, null);
     }
