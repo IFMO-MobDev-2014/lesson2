@@ -4,7 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 /**
@@ -18,7 +18,8 @@ public class PicView extends View {
     public static final int neww = 405;
     public static final int newh = 434;
 
-    //public static final float scale = 1.72811;
+    boolean change_scaling = true;
+    boolean first_try = true;
 
     Bitmap map;
     int[] img = new int[h * w];
@@ -91,6 +92,7 @@ public class PicView extends View {
                 cnt[new_coord]++;
             }
         }
+
         for (int i = 0; i < neww; i++) {
             for (int j = 0; j < newh; j++) {
                 int coord = i * newh + j;
@@ -101,15 +103,37 @@ public class PicView extends View {
         }
     }
 
-    @Override
+    public void changePicture() {
+        if (change_scaling) {
+            fastScaling();
+        } else {
+            coolScaling();
+        }
+    }
 
+    @Override
     public void onDraw(Canvas canvas) {
-        upBrightness();
-        rotate();
-        //fastScaling();
-        coolScaling();
+        if (first_try) {
+            upBrightness();
+            rotate();
+            changePicture();
+            first_try = false;
+        }
+
         canvas.drawBitmap(newimg, 0, newh, 0, 0, newh, neww, false, null);
-        //canvas.drawBitmap(img, 0, h, 0, neww, h, w, false, null);
+        invalidate();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent touch) {
+        int event_id = touch.getAction();
+
+        if (event_id == MotionEvent.ACTION_DOWN) {
+            changePicture();
+            change_scaling = !change_scaling;
+        }
+
+        return true;
     }
 
 }
