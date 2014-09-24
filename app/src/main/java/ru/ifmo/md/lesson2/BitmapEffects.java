@@ -8,14 +8,12 @@ import android.graphics.Color;
  * Created by flash on 24.09.14.
  */
 public class BitmapEffects {
-    private Bitmap bitmap;
     private int height;
     private int width;
 
     private int[] pixels;
 
     public BitmapEffects(Bitmap bitmap) {
-        this.bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight());
         width = bitmap.getWidth();
         height = bitmap.getHeight();
         pixels = new int[width * height];
@@ -23,8 +21,7 @@ public class BitmapEffects {
     }
 
     public Bitmap getBitmap() {
-        bitmap = Bitmap.createBitmap(pixels, 0, width, width, height, Bitmap.Config.ARGB_8888);
-        return bitmap;
+        return Bitmap.createBitmap(pixels, 0, width, width, height, Bitmap.Config.ARGB_8888);
     }
 
     public BitmapEffects compressFast(double scale) {
