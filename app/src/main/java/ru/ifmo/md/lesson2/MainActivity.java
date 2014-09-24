@@ -41,6 +41,7 @@ public class MainActivity extends Activity {
         protected Bitmap bitmap;
 
         public LoaderThread(int level, String tag, ImageLoader loader) {
+            setPriority(MAX_PRIORITY);
             this.level = level;
             this.tag = tag;
             this.loader = loader;
