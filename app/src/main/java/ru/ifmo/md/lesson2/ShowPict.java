@@ -22,8 +22,6 @@ public class ShowPict extends SurfaceView implements Runnable {
     Bitmap comp1;
     int[] col;
     int cur_image = 0;
-    int[] pix = new int[4];
-    double[] coef = new double[4];
     int[][] b = new int[NEED_WIDTH][NEED_HEIGHT];
 
     public ShowPict(Context context) {
@@ -84,17 +82,6 @@ public class ShowPict extends SurfaceView implements Runnable {
         return a;
     }
 
-    int calcScalar(int[] pix, double[] coef, int shift) {
-        int res = 0;
-        for (int i = 0; i < 4; i++) {
-            int pshift = ((pix[i] >> (8 * shift)) & 0xFF);
-            int cur = (int) (pshift * coef[i]);
-            res += cur;
-        }
-        res = Math.min(res, 0xFF);
-        return res << (8 * shift);
-    }
-
     int[] getArray(int[][] a) {
         int w = a.length;
         int h = a[0].length;
@@ -134,37 +121,42 @@ public class ShowPict extends SurfaceView implements Runnable {
         comp0 = Bitmap.createBitmap(colors, 0, a.length, a.length, a[0].length, Bitmap.Config.ARGB_8888);
     }
 
+    int getColor(int mask, int x) {
+        return (mask >> (8 * x)) & 0xFF;
+    }
+
     void Compress1(Bitmap bitmap) {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         int[][] a = bitmapToMatrix(bitmap);
+        int[][] blue = new int[NEED_WIDTH][NEED_HEIGHT];
+        int[][] green = new int[NEED_WIDTH][NEED_HEIGHT];
+        int[][] red = new int[NEED_WIDTH][NEED_HEIGHT];
+        int[][] alpha = new int[NEED_WIDTH][NEED_HEIGHT];
         for (int i = 0; i < NEED_WIDTH; i++) {
-            double ti;
-            ti = i * 1.0 * (width - 1) / (NEED_WIDTH - 1);
-            int w = i * (width - 1) / (NEED_WIDTH - 1);
-            w = Math.min(w, width - 2);
-            double u = ti - w;
             for (int j = 0; j < NEED_HEIGHT; j++) {
-                double tj;
-                tj = j * 1.0 * (height - 1) / (NEED_HEIGHT - 1);
-                int h = j * (height - 1) / (NEED_HEIGHT - 1);
-                h = Math.min(h, height - 2);
-                double t = tj - h;
-
-                coef[0]= (1 - t) * (1 - u);
-                coef[1] = t * (1 - u);
-                coef[2] = t * u;
-                coef[3] = (1 - t) * u;
-
-                pix[0] = a[w][h];
-                pix[1] = a[w][h + 1];
-                pix[2] = a[w + 1][h + 1];
-                pix[3] = a[w + 1][h];
-                int blue = calcScalar(pix, coef, 0);
-                int green = calcScalar(pix, coef, 1);
-                int red = calcScalar(pix, coef, 2);
-                int alpha = calcScalar(pix, coef, 3);
-                b[i][j] = blue + green + red + alpha;
+                blue[i][j] = green[i][j] = red[i][j] = alpha[i][j] = 0xFF;
+            }
+        }
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                int w = (i < 2 * (width - NEED_WIDTH) ? i / 2 :
+                                                       NEED_WIDTH - (width - i));
+                int h = (j < 2 * (height - NEED_HEIGHT) ? j / 2:
+                                                       NEED_HEIGHT - (height - j));
+                blue[w][h] = Math.min(getColor(a[i][j], 0), blue[w][h]);
+                green[w][h] = Math.min(getColor(a[i][j], 1), green[w][h]);
+                red[w][h] = Math.min(getColor(a[i][j], 2), red[w][h]);
+                alpha[w][h] = Math.min(getColor(a[i][j], 3), alpha[w][h]);
+            }
+        }
+        for (int i = 0; i < NEED_WIDTH; i++) {
+            for (int j = 0; j < NEED_HEIGHT; j++) {
+                int newBlue = blue[i][j];
+                int newGreen = green[i][j];
+                int newRed = red[i][j];
+                int newAlpha = alpha[i][j];
+                b[i][j] = newBlue + (newGreen << 8) + (newRed << 16) + (newAlpha << 24);
             }
         }
         a = rotate(b);
