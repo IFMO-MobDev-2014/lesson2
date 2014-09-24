@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.View;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 public class MyActivity extends Activity {
 
@@ -50,85 +52,82 @@ public class MyActivity extends Activity {
     int color(int a, int red, int green, int blue) {
         return (a << 24) + (red << 16) + (green << 8) + blue;
     }
+
     int getRed(int color) {
         return (color << 8) >>> 24;
     }
+
     int getGreen(int color) {
         return (color << 16) >>> 24;
     }
+
     int getBlue(int color) {
         return (color << 24) >>> 24;
     }
 
-    public Bitmap fastCompress(Bitmap bitmap) {
-        int newHeight = (int) Math.round(bitmap.getHeight() / scaleX);
-        int newWidth = (int) Math.round(bitmap.getWidth() / scaleY);
-        Bitmap newBitmap = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888);
-        for (int i = 0; i < newWidth; i++) {
-            for (int j = 0; j < newHeight; j++) {
-                int pix = bitmap.getPixel((int) (i * scaleX), (int) (j * scaleY));
-                newBitmap.setPixel(i, j, pix);
+    public Bitmap fastCompress(int[] pixels, int width, int height) {
+        int newWidth = (int) Math.round(width / scaleY);
+        int newHeight = (int) Math.round(height / scaleX);
+        int[] newPixels = new int[newWidth * newHeight];
+        for (int i = 0; i < newHeight; i++) {
+            for (int j = 0; j < newWidth; j++) {
+                newPixels[i * newWidth + j] = pixels[(int) (i * scaleX) * width + (int) (j * scaleY)];
             }
         }
-        return newBitmap;
+        return Bitmap.createBitmap(newPixels, newWidth, newHeight, Bitmap.Config.ARGB_8888);
     }
 
-    public Bitmap slowCompress(Bitmap bitmap) {
-        int newHeight = (int) Math.round(bitmap.getHeight() / scaleX);
-        int newWidth = (int) Math.round(bitmap.getWidth() / scaleY);
-        Bitmap newBitmap = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888);
-        for (int i = 0; i < newWidth; i++) {
-            for (int j = 0; j < newHeight; j++) {
+    public Bitmap slowCompress(int[] pixels, int width, int height) {
+        int newWidth = (int) Math.round(width / scaleY);
+        int newHeight = (int) Math.round(height / scaleX);
+        int[] newPixels = new int[newWidth * newHeight];
+        for (int i = 0; i < newHeight; i++) {
+            for (int j = 0; j < newWidth; j++) {
                 int ci = (int) (i * scaleX);
                 int cj = (int) (j * scaleY);
                 double ar = 1;
                 double ag = 1;
                 double ab = 1;
                 int k = 0;
-                for (int x = Math.max(0, ci - 1); x < Math.min(bitmap.getWidth(), ci + 2); x++) {
-                    for (int y = Math.max(0, cj - 1); y < Math.min(bitmap.getHeight(), cj + 2); y++) {
-                        k += (3 - Math.abs(ci - x) + Math.abs(cj - y));
-                        ar *= Math.pow(getRed(bitmap.getPixel(x, y)), (3 - Math.abs(ci - x) + Math.abs(cj - y)));
-                        ag *= Math.pow(getGreen(bitmap.getPixel(x, y)), (3 - Math.abs(ci - x) + Math.abs(cj - y)));
-                        ab *= Math.pow(getBlue(bitmap.getPixel(x, y)), (3 - Math.abs(ci - x) + Math.abs(cj - y)));
+                for (int x = Math.max(0, ci - 1); x < Math.min(height, ci + 2); x++) {
+                    for (int y = Math.max(0, cj - 1); y < Math.min(width, cj + 2); y++) {
+                        k++;
+                        int c = pixels[x * width + y];
+                        ar *= getRed(c);
+                        ag *= getGreen(c);
+                        ab *= getBlue(c);
                     }
                 }
-                ar = Math.pow(ar, 1./k);
-                ag = Math.pow(ag, 1./k);
-                ab = Math.pow(ab, 1./k);
-                newBitmap.setPixel(i, j, color(255, (int)ar, (int)ag, (int)ab));
+                ar = Math.pow(ar, 1. / k);
+                ag = Math.pow(ag, 1. / k);
+                ab = Math.pow(ab, 1. / k);
+                newPixels[i * newWidth + j] = color(255, (int) ar, (int) ag, (int) ab);
             }
         }
-        return newBitmap;
+        return Bitmap.createBitmap(newPixels, newWidth, newHeight, Bitmap.Config.ARGB_8888);
     }
 
 
-    public Bitmap rotate(Bitmap bitmap) {
-        int height = bitmap.getHeight();
-        int width = bitmap.getWidth();
-        Bitmap newBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+    public void rotate(int[] pixels, int width, int height) {
+        int[] rotated = new int[pixels.length];
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                newBitmap.setPixel(i, j, bitmap.getPixel(i, height - 1 - j));
+                rotated[i * height + j] = pixels[(height - j - 1) * width + i];
             }
+
         }
-        return newBitmap;
+        for (int i = 0; i < pixels.length; i++) {
+            pixels[i] = rotated[i];
+        }
     }
 
-    public Bitmap increaseBrightness(Bitmap bitmap) {
-        int height = bitmap.getHeight();
-        int width = bitmap.getWidth();
-        Bitmap newBitmap = Bitmap.createBitmap(height, width, Bitmap.Config.ARGB_8888);
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                int pix = bitmap.getPixel(i, j);
-                int r = Math.min(getRed(pix) * 2, 255);
-                int g = Math.min(getGreen(pix) * 2, 255);
-                int b = Math.min(getBlue(pix) * 2, 255);
-                newBitmap.setPixel(j, i, color(255, r, g, b));
-            }
+    public void increaseBrightness(int[] pixels) {
+        for (int i = 0; i < pixels.length; i++) {
+            int r = Math.min(getRed(pixels[i]) * 2, 255);
+            int g = Math.min(getGreen(pixels[i]) * 2, 255);
+            int b = Math.min(getBlue(pixels[i]) * 2, 255);
+            pixels[i] = color(255, r, g, b);
         }
-        return newBitmap;
     }
 
 
@@ -137,14 +136,17 @@ public class MyActivity extends Activity {
         super.onCreate(savedInstanceState);
         paint = new Paint();
         Bitmap img = BitmapFactory.decodeResource(getResources(), R.drawable.source);
-        img = rotate(img);
-
-        img = increaseBrightness(img);
-        fast = fastCompress(img);
-        slow = slowCompress(img);
+        int pixels[] = new int[img.getHeight() * img.getWidth()];
+        img.getPixels(pixels, 0, img.getWidth(), 0, 0, img.getWidth(), img.getHeight());
+        rotate(pixels, img.getWidth(), img.getHeight());
+        increaseBrightness(pixels);
+        img = Bitmap.createBitmap(pixels, img.getHeight(), img.getWidth(), Bitmap.Config.ARGB_8888);
+        fast = fastCompress(pixels, img.getWidth(), img.getHeight());
+        slow = slowCompress(pixels, img.getWidth(), img.getHeight());
 
         myview = new MyView(this);
         setContentView(myview);
+
     }
 
 
