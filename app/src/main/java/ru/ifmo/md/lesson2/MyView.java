@@ -14,6 +14,7 @@ import android.view.SurfaceView;
 import android.view.View;
 
 import java.nio.Buffer;
+import java.util.Arrays;
 import java.util.Random;
 
 import ru.ifmo.md.lesson2.R;
@@ -54,10 +55,8 @@ public class MyView extends View/* implements Runnable */{
         newHeight = (int)(iheight/scale);
 
         badScaling();
-        badlyScaled = rotateImage(badlyScaled);
 
         perfectScaling();
-        smoothScaled = rotateImage(smoothScaled);
     }
 
     public void resume() {
@@ -84,7 +83,7 @@ public class MyView extends View/* implements Runnable */{
                 green = Math.min(Color.green(color) * 2, 255);
                 blue = Math.min(Color.blue(color) * 2, 255);
                 color = Color.rgb(red, green, blue);
-                badlyScaled[i * newWidth + j] = color;
+                badlyScaled[j * newHeight + (newHeight - i - 1)] = color;
             }
         }
     }
@@ -107,19 +106,9 @@ public class MyView extends View/* implements Runnable */{
                 green = Math.min(calc(Color.green(a), Color.green(b), Color.green(c), Color.green(d), dx, dy) * 2, 255);
                 red = Math.min(calc(Color.red(a), Color.red(b), Color.red(c), Color.red(d), dx, dy) * 2, 255);
                 int final_color = Color.rgb(red, green ,blue);
-                smoothScaled[i * newWidth + j] = final_color;
+                smoothScaled[j * newHeight + (newHeight - i - 1)] = final_color;
             }
         }
-    }
-
-    public int[] rotateImage(int [] rotatable) {
-        changeBuffer = new int[newWidth * newHeight];
-        for(int i = 0; i < newHeight; i++) {
-            for(int j = 0; j < newWidth; j++) {
-                changeBuffer[j * newHeight + (newHeight - i - 1)] = rotatable[i * newWidth + j];
-            }
-        }
-        return changeBuffer;
     }
 
     private int calc(int a, int b, int c, int d, double dx, double dy) {
