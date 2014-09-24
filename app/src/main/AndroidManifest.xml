@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ru.ifmo.md.lesson2">
+    package="com.dmitry2537.rotator">
 
     <application
         android:allowBackup="true"
@@ -8,7 +8,7 @@
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Holo.NoActionBar">
         <activity
-            android:name="ru.ifmo.md.lesson2.MyActivity"
+            android:name="com.dmitry2537.rotator.MyActivity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
