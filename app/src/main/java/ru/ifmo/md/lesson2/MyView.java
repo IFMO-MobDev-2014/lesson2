@@ -21,12 +21,18 @@ public class MyView extends SurfaceView implements Runnable{
 
     SurfaceHolder holder;
     Thread thread = null;
+    Thread modifyLight = null;
+    Thread modifyHard = null;
     volatile boolean running = true;
     Bitmap pic;
     int c1, height, width, b, g, r;
-    int[] pixels;
+    int[] pixels, copy;
     Paint paint;
     Canvas canvas;
+    Modify calc1;
+    Modify calc2;
+    private final int w = 434;
+    private final int h = 405;
 
     public MyView(Context context) {
         super(context);
@@ -55,16 +61,27 @@ public class MyView extends SurfaceView implements Runnable{
                 width = pic.getWidth();
                 height = pic.getHeight();
                 pixels = new int[height * width];
+                copy = new int[height * width];
                 pic.getPixels(pixels, 0, width, 0, 0, width, height);
-                paint = new Paint();
+                incBrightnessAndRotate();
+
+                calc1 = new Modify(pixels, width, height, 'e');
+                calc2 = new Modify(pixels, width, height, 'h');
+                modifyLight = new Thread(calc1);
+                modifyHard = new Thread(calc2);
+                modifyLight.start();
+                modifyHard.start();
+
+
 
                 long startTime = System.nanoTime();
                 canvas = holder.lockCanvas();
+                paint = new Paint();
                 onDraw(canvas);
                 holder.unlockCanvasAndPost(canvas);
                 long finishTime = System.nanoTime();
 
-                Log.i("TIME", "Circle: " + (finishTime - startTime) / 1000000);
+                Log.i("TIME", "drawing " + (finishTime - startTime) / 1000000);
                 try {
                     Thread.sleep(1);
                 } catch (InterruptedException ignore) {}
@@ -72,27 +89,31 @@ public class MyView extends SurfaceView implements Runnable{
         }
     }
 
-    private int incBrightness(int x, int y) {
-        c1 = pixels[x + y * width];
+    private void incBrightnessAndRotate() {
+        System.arraycopy(pixels, 0, copy, 0, width * height);
+        for(int x = 0; x < width; x++) {
+            for(int y = 0; y < height; y++) {
+                c1 = pixels[x + y * width];
 
-        b = c1 & 255;
-        g = (c1 >> 8) & 255;
-        r = (c1 >> 16) & 255;
+                b = c1 & 255;
+                g = (c1 >> 8) & 255;
+                r = (c1 >> 16) & 255;
 
-        b = (int) (sqrt(b) * sqrt(255));
-        g = (int) (sqrt(g) * sqrt(255));
-        r = (int) (sqrt(r) * sqrt(255));
+                b = (int) (sqrt(b) * sqrt(255));
+                g = (int) (sqrt(g) * sqrt(255));
+                r = (int) (sqrt(r) * sqrt(255));
 
-        return(0xff000000) | b | (g << 8) | (r << 16);
-    }
-
-    @Override
-    public void onSizeChanged(int w, int h, int oldW, int oldH) {
-
+                copy[(height - y - 1) + x * height] = (0xff000000) | b | (g << 8) | (r << 16);
+            }
+        }
+        c1 = width;
+        width = height;
+        height = c1;
+        pixels = copy;
     }
 
     @Override
     public void onDraw(Canvas canvas) {
-        canvas.drawBitmap(pixels, 0, width, 0, 0, width, height, false, paint);
+        canvas.drawBitmap(calc1.res, 0, w, 0, 0, w, h, false, paint);
     }
 }
