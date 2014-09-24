@@ -7,6 +7,7 @@ import android.net.wifi.p2p.WifiP2pManager;
 /**
  * Created by daria on 23.09.14.
  */
+
 public class Edit {
     Bitmap bitmap, bitmap2;
     int width, height;
