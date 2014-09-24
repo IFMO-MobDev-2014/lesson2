@@ -11,6 +11,7 @@ public class MyActivity extends Activity implements View.OnTouchListener {
     public boolean onTouch(View v, MotionEvent event) {
         if(event.getAction() == MotionEvent.ACTION_DOWN) {
             view.onDraw(view.canvas);
+            view.mode ^= 1;
         }
         return true;
     }

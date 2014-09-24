@@ -37,7 +37,32 @@ public class MyView extends SurfaceView implements Runnable{
     public MyView(Context context) {
         super(context);
         holder = getHolder();
-        
+
+        mode = 0;
+        pic = decodeResource(getResources(), R.drawable.source);
+        width = pic.getWidth();
+        height = pic.getHeight();
+        pixels = new int[height * width];
+        copy = new int[height * width];
+        pic.getPixels(pixels, 0, width, 0, 0, width, height);
+        //incBrightnessAndRotate();
+
+        calc1 = new Modify(pixels, width, height, 'e');
+        calc2 = new Modify(pixels, width, height, 'h');
+        modifyLight = new Thread(calc1);
+        modifyHard = new Thread(calc2);
+        modifyLight.start();
+        modifyHard.start();
+        try {
+            modifyLight.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        try {
+            modifyHard.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void resume() {
@@ -56,31 +81,6 @@ public class MyView extends SurfaceView implements Runnable{
     public void run() {
         while (running) {
             if (holder.getSurface().isValid()) {
-                mode = 0;
-                pic = decodeResource(getResources(), R.drawable.source);
-                width = pic.getWidth();
-                height = pic.getHeight();
-                pixels = new int[height * width];
-                copy = new int[height * width];
-                pic.getPixels(pixels, 0, width, 0, 0, width, height);
-                //incBrightnessAndRotate();
-
-                calc1 = new Modify(pixels, width, height, 'e');
-                calc2 = new Modify(pixels, width, height, 'h');
-                modifyLight = new Thread(calc1);
-                modifyHard = new Thread(calc2);
-                modifyLight.start();
-                modifyHard.start();
-                try {
-                    modifyLight.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    modifyHard.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
 
                 long startTime = System.nanoTime();
                 canvas = holder.lockCanvas();
@@ -128,6 +128,5 @@ public class MyView extends SurfaceView implements Runnable{
         else {
             canvas.drawBitmap(calc1.res, 0, w, 0, 0, w, h, false, paint);
         }
-        mode = (mode + 1) % 2;
     }
 }
