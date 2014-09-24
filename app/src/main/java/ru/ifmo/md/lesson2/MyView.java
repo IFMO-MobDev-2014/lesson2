@@ -72,14 +72,14 @@ public class MyView extends View/* implements Runnable */{
     }
 
     public void badScaling() {
-        double baseX, baseY;
+        int baseX, baseY;
         int red, green, blue, color;
         badlyScaled = new int[newWidth * newHeight];
         for(int i = 0; i < newHeight; i++) {
             for(int j = 0; j < newWidth; j++) {
-                baseX = Math.floor(i * scale);
-                baseY = Math.floor(j * scale);
-                color = image.getPixel((int)baseY, (int)baseX);
+                baseX = (int)(Math.floor(i * scale));
+                baseY = (int)(Math.floor(j * scale));
+                color = imageArray[baseX * iwidth + baseY];
                 red = Math.min(Color.red(color) * 2, 255);
                 green = Math.min(Color.green(color) * 2, 255);
                 blue = Math.min(Color.blue(color) * 2, 255);
@@ -99,10 +99,10 @@ public class MyView extends View/* implements Runnable */{
                 y = (int)(scale * i);
                 dx = (scale * j) - x;
                 dy = (scale * i) - y;
-                a = image.getPixel(x, y);
-                b = image.getPixel(x, y + 1);
-                c = image.getPixel(x + 1, y);
-                d = image.getPixel(x + 1, y + 1);
+                a = imageArray[y * iwidth + x];
+                b = imageArray[(y + 1) * iwidth + x];
+                c = imageArray[y * iwidth + x + 1];
+                d = imageArray[(y + 1) * iwidth + x + 1];
                 blue = Math.min(Color.blue(calc(a, b, c, d, dx, dy)) * 2, 255);
                 green = Math.min(calc(Color.green(a), Color.green(b), Color.green(c), Color.green(d), dx, dy) * 2, 255);
                 red = Math.min(calc(Color.red(a), Color.red(b), Color.red(c), Color.red(d), dx, dy) * 2, 255);
