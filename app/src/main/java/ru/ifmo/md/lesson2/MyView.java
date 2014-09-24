@@ -19,7 +19,7 @@ import java.util.Random;
 
 import ru.ifmo.md.lesson2.R;
 
-public class MyView extends View/* implements Runnable */{
+public class MyView extends View{
     int width = 0;
     int height = 0;
     int iwidth = 0;
@@ -28,7 +28,7 @@ public class MyView extends View/* implements Runnable */{
     int newHeight = 0;
     static final double scale = 1.73;
     boolean state;
-    int [] imageArray, badlyScaled, smoothScaled, changeBuffer;
+    int [] imageArray, badlyScaled, smoothScaled;
     Bitmap image;
 
     public MyView(Context context) {
