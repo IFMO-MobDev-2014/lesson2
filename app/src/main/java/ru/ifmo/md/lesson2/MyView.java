@@ -23,9 +23,12 @@ public class MyView extends View/* implements Runnable */{
     int height = 0;
     int iwidth = 0;
     int iheight = 0;
+    int newWidth = 0;
+    int newHeight = 0;
     static final double scale = 1.73;
     boolean state;
-    Bitmap image, badlyScaled, smoothScaled;
+    int [] imageArray, badlyScaled, smoothScaled, changeBuffer;
+    Bitmap image;
 
     public MyView(Context context) {
         super(context);
@@ -38,14 +41,23 @@ public class MyView extends View/* implements Runnable */{
         state = false;
         iwidth = image.getWidth();
         iheight = image.getHeight();
+        imageArray = new int[iwidth * iheight];
+        for(int i = 0; i < image.getHeight(); i++) {
+            for(int j = 0; j < image.getWidth(); j++) {
+                imageArray[i * iwidth + j] = image.getPixel(j, i);
+            }
+        }
     }
 
     public void makeModifications() {
+        newWidth = (int)(iwidth/scale);
+        newHeight = (int)(iheight/scale);
+
         badScaling();
-        badlyScaled = rotateAndMakeBrighterImage(badlyScaled);
+        badlyScaled = rotateImage(badlyScaled);
 
         perfectScaling();
-        smoothScaled = rotateAndMakeBrighterImage(smoothScaled);
+        smoothScaled = rotateImage(smoothScaled);
     }
 
     public void resume() {
@@ -60,11 +72,9 @@ public class MyView extends View/* implements Runnable */{
     }
 
     public void badScaling() {
-        int newWidth = (int)(iwidth / scale);
-        int newHeight = (int)(iheight /scale);
         double baseX, baseY;
         int red, green, blue, color;
-        badlyScaled = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.RGB_565);
+        badlyScaled = new int[newWidth * newHeight];
         for(int i = 0; i < newHeight; i++) {
             for(int j = 0; j < newWidth; j++) {
                 baseX = Math.floor(i * scale);
@@ -74,15 +84,13 @@ public class MyView extends View/* implements Runnable */{
                 green = Math.min(Color.green(color) * 2, 255);
                 blue = Math.min(Color.blue(color) * 2, 255);
                 color = Color.rgb(red, green, blue);
-                badlyScaled.setPixel(j, i, color);
+                badlyScaled[i * newWidth + j] = color;
             }
         }
     }
 
     public void perfectScaling() {
-        int newWidth = (int)(iwidth / scale);
-        int newHeight = (int)(iheight /scale);
-        smoothScaled = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.RGB_565);
+        smoothScaled = new int[newWidth * newHeight];
         int a, b, c, d, x, y, blue, green, red;
         double dx, dy;
         for(int i = 0; i < newHeight; i++) {
@@ -99,21 +107,19 @@ public class MyView extends View/* implements Runnable */{
                 green = Math.min(calc(Color.green(a), Color.green(b), Color.green(c), Color.green(d), dx, dy) * 2, 255);
                 red = Math.min(calc(Color.red(a), Color.red(b), Color.red(c), Color.red(d), dx, dy) * 2, 255);
                 int final_color = Color.rgb(red, green ,blue);
-                smoothScaled.setPixel(j, i, final_color);
+                smoothScaled[i * newWidth + j] = final_color;
             }
         }
     }
 
-    public Bitmap rotateAndMakeBrighterImage(Bitmap rotatable) {
-        int w = rotatable.getWidth();
-        int h = rotatable.getHeight();
-        Bitmap temp = Bitmap.createBitmap(h, w, Bitmap.Config.RGB_565);
-        for(int i = 0; i < h; i++) {
-            for(int j = 0; j < w; j++) {
-                temp.setPixel(h - i - 1, j, rotatable.getPixel(j, i));
+    public int[] rotateImage(int [] rotatable) {
+        changeBuffer = new int[newWidth * newHeight];
+        for(int i = 0; i < newHeight; i++) {
+            for(int j = 0; j < newWidth; j++) {
+                changeBuffer[j * newHeight + (newHeight - i - 1)] = rotatable[i * newWidth + j];
             }
         }
-        return temp;
+        return changeBuffer;
     }
 
     private int calc(int a, int b, int c, int d, double dx, double dy) {
@@ -129,10 +135,9 @@ public class MyView extends View/* implements Runnable */{
 
     @Override
     public void onDraw(Canvas canvas) {
-        Log.i("STATE", state + "");
         if(state)
-            canvas.drawBitmap(badlyScaled, 0, 0, null);
+            canvas.drawBitmap(smoothScaled, 0, newHeight, 0, 0, newHeight, newWidth, false, null);
         else
-            canvas.drawBitmap(smoothScaled, 0, 0, null);
+            canvas.drawBitmap(badlyScaled, 0, newHeight, 0, 0, newHeight, newWidth, false, null);
     }
 }
