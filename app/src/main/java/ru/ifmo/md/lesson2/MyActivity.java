@@ -41,7 +41,6 @@ public class MyActivity extends Activity {
             public boolean onLongClick(View view) {
                 width = startWidth;
                 height = startHeight;
-                image.setImageResource(android.R.color.transparent);
                 bitmap = changeImage(startBitmap);
                 image.setImageBitmap(bitmap);
                 return true;

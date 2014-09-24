@@ -16,7 +16,7 @@
         android:layout_height="375dp"
         android:id="@+id/imageView"
         android:layout_centerInParent="true"
-        android:background="@drawable/mysource"
         android:onClick="onClick"
-        android:longClickable="true" />
+        android:longClickable="true"
+        android:src="@drawable/mysource" />
 </RelativeLayout>
