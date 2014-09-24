@@ -47,7 +47,28 @@ public class Modify implements Runnable{
         return (int) (sqrt[(c1 >> 16) & 255] * sqrt[255]);
     }
 
+    private int mixColor(int x, int y)
+    {
+        int c1 = a[x + y * width];
+        int b = c1 & 255;
+        int g = (c1 >> 8) & 255;
+        int r = (c1 >> 16) & 255;
+        b = (int) (sqrt[b] * sqrt[255]);
+        g = (int) (sqrt[g] * sqrt[255]);
+        r = (int) (sqrt[r] * sqrt[255]);
+        return (0xff000000) | b | (g << 8) | (r << 16);
+    }
+
+
     private void lowTier() {
+        int x1, y1;
+        for (int i = 0; i < w; i++) {
+            for (int j = 0; j < h; j++) {
+                x1 = (int) ((width - 1) * (float) j / (h - 1) + 0.5f);
+                y1 = (int) ((height - 1) * (1.0 - (float) i / (w - 1)) + 0.5f);
+                res[i + j * w] = mixColor(x1, y1);
+            }
+        }
 
     }
 

@@ -126,7 +126,7 @@ public class MyView extends SurfaceView implements Runnable{
             canvas.drawBitmap(calc2.res, 0, w, 0, 0, w, h, false, paint);
         }
         else {
-            canvas.drawBitmap(pixels, 0, w, 0, 0, w, h, false, paint);
+            canvas.drawBitmap(calc1.res, 0, w, 0, 0, w, h, false, paint);
         }
         mode = (mode + 1) % 2;
     }
