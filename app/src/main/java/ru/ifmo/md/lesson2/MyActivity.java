@@ -5,8 +5,13 @@ import android.os.Bundle;
 
 public class MyActivity extends Activity {
 
+    private RotateView rotateView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        rotateView = new RotateView(this);
+        setContentView(rotateView);
+
     }
 }
