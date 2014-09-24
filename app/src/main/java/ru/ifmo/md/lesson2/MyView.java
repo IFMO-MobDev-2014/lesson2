@@ -25,7 +25,7 @@ public class MyView extends SurfaceView implements Runnable{
     Thread modifyHard = null;
     volatile boolean running = true;
     Bitmap pic;
-    int c1, height, width, b, g, r;
+    int c1, height, width, b, g, r, mode;
     int[] pixels, copy;
     Paint paint;
     Canvas canvas;
@@ -56,14 +56,14 @@ public class MyView extends SurfaceView implements Runnable{
     public void run() {
         while (running) {
             if (holder.getSurface().isValid()) {
-
+                mode = 0;
                 pic = decodeResource(getResources(), R.drawable.source);
                 width = pic.getWidth();
                 height = pic.getHeight();
                 pixels = new int[height * width];
                 copy = new int[height * width];
                 pic.getPixels(pixels, 0, width, 0, 0, width, height);
-                incBrightnessAndRotate();
+                //incBrightnessAndRotate();
 
                 calc1 = new Modify(pixels, width, height, 'e');
                 calc2 = new Modify(pixels, width, height, 'h');
@@ -71,8 +71,16 @@ public class MyView extends SurfaceView implements Runnable{
                 modifyHard = new Thread(calc2);
                 modifyLight.start();
                 modifyHard.start();
-
-
+                try {
+                    modifyLight.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    modifyHard.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 long startTime = System.nanoTime();
                 canvas = holder.lockCanvas();
@@ -114,6 +122,12 @@ public class MyView extends SurfaceView implements Runnable{
 
     @Override
     public void onDraw(Canvas canvas) {
-        canvas.drawBitmap(calc1.res, 0, w, 0, 0, w, h, false, paint);
+        if(mode < 1) {
+            canvas.drawBitmap(calc2.res, 0, w, 0, 0, w, h, false, paint);
+        }
+        else {
+            canvas.drawBitmap(pixels, 0, w, 0, 0, w, h, false, paint);
+        }
+        mode = (mode + 1) % 2;
     }
 }

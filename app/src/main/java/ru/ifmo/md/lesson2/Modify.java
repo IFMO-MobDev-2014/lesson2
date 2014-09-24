@@ -48,6 +48,10 @@ public class Modify implements Runnable{
     }
 
     private void lowTier() {
+
+    }
+
+    private void highTier() {
         short [] rs = new short [w * h];
         short [] gs = new short [w * h];
         short [] bs = new short [w * h];
@@ -68,9 +72,5 @@ public class Modify implements Runnable{
         {
             res[i] = (0xff000000 | (bs[i] / count[i]) | ((gs[i] / count[i]) << 8) | ((rs[i] / count[i]) << 16));
         }
-    }
-
-    private void highTier() {
-
     }
 }
