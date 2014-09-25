@@ -41,10 +41,10 @@ public class Modify implements Runnable{
     {
         int c1 = a[x + y * width];
         if (c == 0)
-            return (int) (sqrt[c1 & 255] * sqrt[255]);
+            return (c1 & 255);
         if (c == 1)
-            return (int) (sqrt[(c1 >> 8) & 255] * sqrt[255]);
-        return (int) (sqrt[(c1 >> 16) & 255] * sqrt[255]);
+            return ((c1 >> 8) & 255);
+        return ((c1 >> 16));
     }
 
     private int mixColor(int x, int y)
@@ -66,7 +66,7 @@ public class Modify implements Runnable{
             for (int j = 0; j < h; j++) {
                 x1 = (int) ((width - 1) * (float) j / (h - 1) + 0.5f);
                 y1 = (int) ((height - 1) * (1.0 - (float) i / (w - 1)) + 0.5f);
-                res[i + j * w] = mixColor(x1, y1);
+                res[i + j * w] = a[x1 + y1 * width];
             }
         }
 

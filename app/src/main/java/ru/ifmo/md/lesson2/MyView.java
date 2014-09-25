@@ -45,7 +45,7 @@ public class MyView extends SurfaceView implements Runnable{
         pixels = new int[height * width];
         copy = new int[height * width];
         pic.getPixels(pixels, 0, width, 0, 0, width, height);
-        //incBrightnessAndRotate();
+        incBrightnessAndRotate();
 
         calc1 = new Modify(pixels, width, height, 'e');
         calc2 = new Modify(pixels, width, height, 'h');
