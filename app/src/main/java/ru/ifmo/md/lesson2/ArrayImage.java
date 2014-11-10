@@ -4,15 +4,13 @@ import android.graphics.Bitmap;
 
 /**
  * Created by Anton Borzenko on 10.11.2014.
+ * Class that contains massive of colors, width and height of picture
  */
 public class ArrayImage {
-    private int width, height;
-    private int[] image;
+    private int width = 0, height = 0;
+    private int[] image = null;
     public ArrayImage(int[] image, int width, int height) {
         setImage(image, width, height);
-    }
-    public ArrayImage(int width, int height) {
-        setImage(width, height);
     }
     public ArrayImage(Bitmap bitmap) {
         setImage(bitmap);
@@ -35,7 +33,10 @@ public class ArrayImage {
         setImage(new int[width * height], width, height);
     }
     public void setImage(Bitmap bitmap) {
-        setImage(new int[width * height], bitmap.getWidth(), bitmap.getHeight());
+        setImage(bitmap.getWidth(), bitmap.getHeight());
         bitmap.getPixels(image, 0, width, 0, 0, width, height);
+    }
+    public Bitmap toBitmap() {
+        return Bitmap.createBitmap(image, width, height, Bitmap.Config.RGB_565);
     }
 }
