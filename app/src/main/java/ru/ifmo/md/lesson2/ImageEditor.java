@@ -19,41 +19,34 @@ public class ImageEditor {
                (argb[2] <<  8) |
                 argb[3];
     }
+
     public static ArrayImage scale(ArrayImage image, float scale, ScaleMode scaleMode) {
         if (image == null) {
             return null;
         }
-        int width  = image.getWidth();
-        int height = image.getHeight();
-        int newWidth  = (int)(width  * scale);
-        int newHeight = (int)(height * scale);
-        int[] colors1 = image.getImage();
-        int[] colors2 = new int[newWidth * newHeight];
+        int width = image.getWidth(), height = image.getHeight();
+        int newWidth  = (int)(width  * scale), newHeight = (int)(height * scale);
+        int[] colors1 = image.getImage(), colors2 = new int[newWidth * newHeight];
         int[] sum = new int[4], argb = new int[4];
+
         if (scaleMode == ScaleMode.SLOW && scale < 1.0f) {
             for (int y = 0; y < newHeight; y++) {
                 for (int x = 0; x < newWidth; x++) {
-                    int x1 = (int)(x / scale);
-                    int y1 = (int)(y / scale);
-                    int x2 = (int)((x + 1) / scale);
-                    int y2 = (int)((y + 1) / scale);
+                    int x1 = (int)(x / scale), y1 = (int)(y / scale);
+                    int x2 = (int)((x + 1) / scale), y2 = (int)((y + 1) / scale);
                     int cnt = 0;
-                    for (int i = 0; i < 4; i++) {
-                        sum[i] = 0;
-                    }
+                    for (int i = 0; i < 4; i++) sum[i] = 0;
+
                     for (int i = y1; i < y2; i++) {
                         for (int j = x1; j < x2; j++) {
                             toARGB(argb, colors1[j + i * width]);
-                            for (int k = 0; k < 4; k++) {
-                                sum[k] += argb[k];
-                            }
+                            for (int k = 0; k < 4; k++) sum[k] += argb[k];
+
                             cnt++;
                         }
                     }
                     if (cnt != 0) {
-                        for (int i = 0; i < 4; i++) {
-                            sum[i] /= cnt;
-                        }
+                        for (int i = 0; i < 4; i++) sum[i] /= cnt;
                         colors2[x + y * newWidth] = fromARGB(sum);
                     } else {
                         colors2[x + y * newWidth] = colors1[(int) (x / scale) + (int) (y / scale) * width];
@@ -69,6 +62,7 @@ public class ImageEditor {
         }
         return new ArrayImage(colors2, newWidth, newHeight);
     }
+
     private static int transform(int times, int x, int y, int width, int height) {
         switch (times) {
             case 0:
@@ -81,6 +75,7 @@ public class ImageEditor {
                 return (height - y - 1) + x * height;
         }
     }
+
     public static ArrayImage rotate(ArrayImage image, int times) {
         if (image == null) {
             return null;
@@ -105,6 +100,7 @@ public class ImageEditor {
         }
         return new ArrayImage(colors2, width, height);
     }
+
     public static ArrayImage changeBrightness(ArrayImage image, float ratio) {
         if (image == null) {
             return null;
