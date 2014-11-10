@@ -29,7 +29,6 @@ public class MyActivity extends Activity {
     int[] slowPixels;
     ImageView imageView = null;
     Bitmap bitmap = null;
-    Bitmap initBitmap = null;
     Bitmap fastBitmap = null;
     Bitmap slowBitmap = null;
 
@@ -45,7 +44,7 @@ public class MyActivity extends Activity {
             @Override
             public void onClick(View view) {
                 if(comp == Compression.SLOW) {
-                    imageView.setImageBitmap(bitmap);
+                    imageView.setImageBitmap(slowBitmap);
                     comp = Compression.FAST;
                 } else {
                     imageView.setImageBitmap(fastBitmap);
@@ -58,7 +57,6 @@ public class MyActivity extends Activity {
     void makeRightPicture() {
         bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.source);
         bitmap.getPixels(initPixels, 0, sourceWidth, 0, 0, sourceWidth, sourceHeight);
-        initBitmap = Bitmap.createBitmap(initPixels, sourceWidth, sourceHeight, Bitmap.Config.RGB_565);
         increaseBrightness(initPixels, sourceWidth, sourceHeight);
         rotatePicture(initPixels, sourceWidth, sourceHeight);
         bitmap.recycle();
@@ -66,6 +64,7 @@ public class MyActivity extends Activity {
         fastPixels = fastCompression(initPixels, sourceWidth, sourceHeight, targetWidth, targetHeight);
         fastBitmap = Bitmap.createBitmap(fastPixels, 0, targetWidth, targetWidth, targetHeight, Bitmap.Config.ARGB_8888);
         slowPixels = slowCompression(initPixels, sourceWidth, sourceHeight, targetWidth, targetHeight);
+        slowBitmap = Bitmap.createBitmap(slowPixels, 0, targetWidth, targetWidth, targetHeight, Bitmap.Config.ARGB_8888);
     }
 
     void increaseBrightness(int[] pixels, int width, int height) {
@@ -115,6 +114,32 @@ public class MyActivity extends Activity {
 
     int[] slowCompression(int[] pixels, int width, int height, int needWidth, int needHeight) {
         int[] modernPicture = new int[needWidth * needHeight];
+        int[] counter = new int[needWidth * needHeight];
+        int[] sum = new int[needWidth * needHeight];
+
+        for(int k = 0; k < 4; k++) {
+            for(int i = 0; i < needWidth * needHeight; i++) {
+                counter[i] = 0;
+                sum[i] = 0;
+            }
+
+            for(int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
+                    int dx = (int)(i / 1.73);
+                    int dy = (int)(j / 1.73);
+                    counter[dx * needWidth + dy]++;
+                    int temp = (pixels[i * width + j] >> (8 * k)) & 255;
+                    sum[dx * needWidth + dy] += temp;
+                }
+            }
+
+            for(int i = 0; i < needHeight; i++) {
+                for(int j = 0; j < needWidth; j++) {
+                    int temp = sum[i * needWidth + j] / Math.max(1, counter[i * needWidth + j]);
+                    modernPicture[i * needWidth + j] |= temp << (8 * k);
+                }
+            }
+        }
 
         return modernPicture;
     }
