@@ -97,11 +97,11 @@ public class MyActivity extends Activity {
         int[] colors = new int[w * h];
 
         map.getPixels(colors, 0, w, 0, 0, w, h);
-        //colors = rotate(colors, w, h);
+        colors = rotate(colors, w, h);
         //swap w, h after rotate
-        //int tmp = w;
-        //w = h;
-        //h = tmp;
+        int tmp = w;
+        w = h;
+        h = tmp;
         addBrightness(colors);
 
         int needW = (int)((w - 1) / scale + 1);
