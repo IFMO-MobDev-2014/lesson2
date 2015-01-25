@@ -9,106 +9,112 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 public class MyActivity extends Activity {
 
-    int WayOfZipping = 1;
-    Resources res;
-    int hAfter = 405;
-    int wAfter = 434;
-    double scale = 1.73;
+    private int[] source;
+    private int w;
+    private int h;
+    private double scale = 1.73;
 
 
-    int[] scaleF(int[] colors, int w, int h) {
+    void scaleF() {
+        int hAfter = (int)(h/scale);
+        int wAfter = (int)(w/scale);
         int res[] = new int[wAfter * hAfter];
-        for (int k = 0; k < 4; k++) {
-            for (int i = 0; i < h; i++) {
-                for (int j = 0; j < w; j++) {
-                    res[(int)(i / scale) * wAfter + (int)(j / scale)] = colors[i * w + j];
-                }
+
+        for (int y = 0; y < hAfter; y++) {
+            int yw = y * wAfter;
+            for (int x = 0; x < wAfter; x++) {
+                res[yw + x] = source[y * w / wAfter * w + x * h / hAfter];
             }
         }
-        return res;
+
+        w = wAfter;
+        h = hAfter;
+        source = res;
     }
 
-    int[] scaleQ(int[] colors, int w, int h) {
-        //saw in habr, may not working, so may the God be with us
-        //upd: tested, work is correct
+    void scaleQ() {
+
+        int hAfter = (int)(h/scale);
+        int wAfter = (int)(w/scale);
         int res[] = new int[wAfter * hAfter];
-        int cnt[] = new int[wAfter * hAfter];
-        int sum[] = new int[wAfter * hAfter];
 
-        for (int k = 0; k < 4; k++) {
-             for (int i = 0; i<wAfter*hAfter; i++) {
-                 cnt[i] = 0;
-                 sum[i] = 0;
-             }
-             for (int i = 0; i < h; i++) {
-                  for (int j = 0; j < w; j++) {
-                       cnt[(int)(i / scale) * wAfter + (int)(j / scale)]++;
-                       sum[(int)(i / scale) * wAfter + (int)(j / scale)] += (colors[i * w + j] >> (8 * k)) & 255;
-                  }
-        }
-            for (int i = 0; i < hAfter; i++) {
-                 for (int j = 0; j < wAfter; j++) {
-                      int x = sum[i * wAfter + j] / Math.max(1, cnt[i * wAfter + j]);
-                      res[i * wAfter + j] |= x << (8 * k);
-                 }
-            }
-        }
-        return res;
-    }
+        int newSize = wAfter * hAfter;
+        int[] cnt = new int[newSize];
+        int[] red = new int[newSize];
+        int[] green = new int[newSize];
+        int[] blue = new int[newSize];
 
-    int[] rotateSimple(int[] img, int w, int h) {
-        int[] res = new int[w*h];
+        for (int i = 0; i < newSize; i++) {
+            cnt[i] = red[i] = green[i] = blue[i] = 0;
+        }
+
         for (int y = 0; y < h; y++) {
+            int newY = y * hAfter / h;
+            int newYW = newY * wAfter;
+            int yw = y * w;
             for (int x = 0; x < w; x++) {
-                res[ x * h + (h - y - 1)] = img[y * w + x];
+                int newX = x * wAfter / w;
+                int color = source[yw + x];
+                int index = newYW + newX;
+                int r = (color >> 16) & 0xFF;
+                int g = (color >> 8) & 0xFF;
+                int b = color & 0xFF;
+
+                red[index] += r;
+                green[index] += g;
+                blue[index] += b;
+                cnt[index]++;
             }
         }
-        return res;
+
+        for (int i = 0; i < newSize; i++) {
+            int count = cnt[i];
+            res[i] = 0xFF000000 | (red[i] / count) << 16 | (green[i] / count) << 8 | (blue[i] / count);
+        }
+
+        w = wAfter;
+        h = hAfter;
+        source = res;
     }
 
-    int[] changeBrightnessWT(int[] img, int w, int h) {
-        int res[] = new int[w*h];
+    void rotateSimple() {
+
+        int[] res = new int[w * h];
+        for (int y = 0; y < h; y++) {
+            int yw = y * w;
+            int hy = h - y - 1;
+            for (int x = 0; x < w; x++) {
+                int xh = x * h;
+                res[xh + hy] = source[yw + x];
+            }
+        }
+        source = res;
+        int t = w;
+        w = h;
+        h = t;
+    }
+
+
+    void changeBrightnessWT() {
         int brtTable[] = new int[256]; //Template for brightness changing: improves speed and quality, for some look.
         for (int i = 0; i < 256; i++) {
             brtTable[i] = (int) (Math.sqrt(((float) i) / 255.0f) * 255.0f);
         }
 
         for (int i = 0; i < w*h; i++) { //Brightness changing
-            int red = img[i] & 0xff;      //getting three color channels, improving and pushing back
-            int green = (img[i] & 0xff00) >> 8;
-            int blue = (img[i] & 0xff0000) >> 16;
+            int red = source[i] & 0xff;      //getting three color channels, improving and pushing back
+            int green = (source[i] & 0xff00) >> 8;
+            int blue = (source[i] & 0xff0000) >> 16;
             red = brtTable[red];
             green = brtTable[green];
             blue = brtTable[blue];
-            res[i] = 0xff000000 | red | (green << 8) | (blue << 16);
+            source[i] = 0xff000000 | red | (green << 8) | (blue << 16);
         }
-        return res;
-    }
-
-    void doYourWorkDude(int[] pixelsBefore, int wBefore, int hBefore) {
-        int[] scaledPixels;
-        int[] brightenedPixels;
-
-        if (WayOfZipping > 0) { //fast way
-            scaledPixels =  scaleF(pixelsBefore, wBefore, hBefore);
-        }
-        else {      //better quality
-            scaledPixels =  scaleQ(pixelsBefore, wBefore, hBefore);
-        }
-
-        int rotatedPixels[] = rotateSimple(scaledPixels, wAfter, hAfter);
-
-        int tmp = wAfter;
-        wAfter = hAfter;
-        hAfter = tmp;
-
-        brightenedPixels = changeBrightnessWT(rotatedPixels, wAfter, hAfter);
-        final ImageView imgview = (ImageView)findViewById(R.id.img);
-        imgview.setImageBitmap(Bitmap.createBitmap(brightenedPixels, wAfter, hAfter, Bitmap.Config.ARGB_8888));
     }
 
     @Override
@@ -117,52 +123,50 @@ public class MyActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        res = this.getResources();
-        Bitmap bmp = BitmapFactory.decodeResource(res, R.drawable.source);
 
-        final ImageView imgview = (ImageView)findViewById(R.id.img);
-        final TextView scmodeTextView = (TextView)findViewById(R.id.scmodeTextView);
-        scmodeTextView.setText("fast scaling (tap the image to change");
+        final ImageView imageView = (ImageView)findViewById(R.id.img);
         final Button startButton = (Button)findViewById(R.id.btnStart);
         final Button resetButton = (Button)findViewById(R.id.btnReset);
+        final RadioButton fRButton = (RadioButton)findViewById(R.id.scale_mode_fast);
 
-        imgview.setImageBitmap(bmp);
+        fRButton.setChecked(true);
 
-        final int hBefore = bmp.getHeight();
-        final int wBefore = bmp.getWidth();
+        Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.source);
+        imageView.setImageBitmap(bmp);
 
-        final int pixelsBefore[] = new int[hBefore*wBefore];
+        h = bmp.getHeight();
+        w = bmp.getWidth();
 
-        bmp.getPixels(pixelsBefore, 0, wBefore, 0, 0, wBefore, hBefore);
+        source = new int[w*h];
 
-        View.OnClickListener img_onClick = new View.OnClickListener() {
+        bmp.getPixels(source, 0, w, 0, 0, w, h);
+
+        resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                WayOfZipping *= -1;
-                if (WayOfZipping > 0) {
-                    scmodeTextView.setText("fast scaling");
+                Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.source);
+                h = bmp.getHeight();
+                w = bmp.getWidth();
+                source = new int[w*h];
+                bmp.getPixels(source, 0, w, 0, 0, w, h);
+                imageView.setImageBitmap(bmp);
+                startButton.setEnabled(true);
+            }
+        });
+
+        startButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (fRButton.isChecked()) {
+                    scaleF();
+                } else {
+                    scaleQ();
                 }
-                else {
-                    scmodeTextView.setText("better but slow scaling");
-                }
+                rotateSimple();
+                changeBrightnessWT();
+                imageView.setImageBitmap(Bitmap.createBitmap(source, w, h, Bitmap.Config.ARGB_8888));
+                startButton.setEnabled(false);
             }
-        };
-        imgview.setOnClickListener(img_onClick);
-
-        View.OnClickListener rstBtn_onClick = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                imgview.setImageBitmap(BitmapFactory.decodeResource(res, R.drawable.source));
-            }
-        };
-        resetButton.setOnClickListener(rstBtn_onClick);
-
-        View.OnClickListener strBtn_onClick = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                doYourWorkDude(pixelsBefore, wBefore, hBefore);
-            }
-        };
-        startButton.setOnClickListener(strBtn_onClick);
+        });
     }
 }

@@ -2,5 +2,8 @@
 <resources>
 
     <string name="app_name">Lesson2</string>
-
+    <string name="scale_mode_fast">Fast scaling</string>
+    <string name="scale_mode_better">Better scaling</string>
+    <string name="start">Start</string>
+    <string name="reset">Reset</string>
 </resources>

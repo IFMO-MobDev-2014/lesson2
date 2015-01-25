@@ -11,12 +11,21 @@
         android:orientation="horizontal"
         android:weightSum="1">
 
-        <TextView
-            android:id="@+id/scmodeTextView"
+        <RadioGroup
             android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:layout_weight="1.02"
-            android:text="Scale mode" />
+            android:layout_height="wrap_content">
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/scale_mode_fast"
+                android:text="@string/scale_mode_fast" />
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/scale_mode_better"
+                android:text="@string/scale_mode_better" />
+            </RadioGroup>
 
         <Button
             android:id="@+id/btnStart"
@@ -36,10 +45,9 @@
 
     <ImageView
         android:id="@+id/img"
-        android:onClick="img_onClick"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:cropToPadding="false"
-        android:scaleType="fitCenter" />
+        android:scaleType="center" />
 
 </LinearLayout>
