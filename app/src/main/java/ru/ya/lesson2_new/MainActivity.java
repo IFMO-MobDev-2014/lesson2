@@ -1,17 +1,20 @@
-package ru.ifmo.md.lesson2;
+package ru.ya.lesson2_new;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+
+import ru.ya.lesson2_new.R;
 
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 
-public class MyActivity extends Activity {
+public class MainActivity extends Activity {
     boolean flag = false;
     final static int W = 405;
     final static int H = 434;
@@ -20,9 +23,9 @@ public class MyActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.active);
+        setContentView(R.layout.activity_main);
         bitmap0 = BitmapFactory.decodeResource(getResources(), R.drawable.source);
-        imageView = (ImageView)findViewById(R.id.ViewXXX);
+        imageView = (ImageView)findViewById(R.id.image);
         check();
     }
     void check() {
@@ -41,6 +44,9 @@ public class MyActivity extends Activity {
         bitmap = rotate90(compressionFast(bitmap0));
     }
 
+    //public Bitmap light(Bitmap bitmap) {
+
+    //}
 
     public Bitmap compressionFast(Bitmap bitmap) {
         float scale = bitmap.getWidth() * 1f / W;
@@ -72,7 +78,7 @@ public class MyActivity extends Activity {
         Bitmap newBitmap = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888);
         int [] data = new int[bitmap.getHeight() * bitmap.getWidth()];
         int [] newData = new int [W * H];
-        int [] cnt = new int [W * H];
+//        int [] cnt = new int [W * H];
         int [] r = new int[W * H];
         int [] g = new int[W * H];
         int [] b = new int[W * H];
@@ -86,7 +92,7 @@ public class MyActivity extends Activity {
         for (int i = 0; i < width; i++)
             for (int j = 0; j < height; j++) {
                 int from = i + j * width;
-                int to  = round(j / scale) * W + round(i / scale);
+                int to  = min(H - 1, round(j / scale)) * W + min(W - 1, round(i / scale));
                 r[to] = min(r[to], data[from] & ((1 << cntBit) - 1));
                 g[to] = min(g[to], (data[from] >> cntBit) & ((1 << cntBit) - 1));
                 b[to] = min(b[to], (data[from] >> (cntBit * 2)) & ((1 << cntBit) - 1));
@@ -106,9 +112,9 @@ public class MyActivity extends Activity {
         int [] data = new int[W * H];
         int [] newData = new int [W * H];
         bitmap.getPixels(data, 0, W, 0, 0, W, H);
-        for (int i = 0; i < W; i++)
-            for (int j = 0; j < H; j++)
-                newData[(W - i - 1) * H + j] = data[i + j * W];
+        for (int i = 0; i < H; i++)
+            for (int j = 0; j < W; j++)
+                newData[j * H + (H - 1 - i)] = data[i * W + j];
         newBitmap.setPixels(newData, 0, H, 0, 0, H, W);
         return newBitmap;
     }
