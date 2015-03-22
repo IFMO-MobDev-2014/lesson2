@@ -40,7 +40,6 @@ public class MyActivity extends Activity {
 
         badCompression(colors, w, h);
         isGood = false;
-    //    iv.setImageBitmap(bad);
 
         goodCompression(colors, w, h);
 
@@ -85,14 +84,14 @@ public class MyActivity extends Activity {
         int w2 = (int)(w / comp);
         int h2 = (int)(h / comp);
         int[] res = new int[w2 * h2];
-        int i2, j2;
+        int i, j;
 
-        for (int i = 0; i < h; i++) {
-            for (int j = 0; j < w; j++) {
-                i2 = (int) (i / comp);
-                j2 = (int) (j / comp);
+        for (int i2 = 0; i2 < h2; i2++) {
+            for (int j2 = 0; j2 < w2; j2++) {
+                i = (int) (i2 * comp);
+                j = (int) (j2 * comp);
 
-                if (i2 * w2 + j2 < w2 * h2) {
+                if (i * w + j < w * h) {
                     res[i2 * w2 + j2] = colors[i * w + j];
                 }
             }
@@ -116,6 +115,11 @@ public class MyActivity extends Activity {
         int x2, i2, j2, oldC, k, i, j;
 
         for (i = 0; i < w2 * h2; i++) {
+            res[i] = 0;
+            a[i] = 0;
+            r[i] = 0;
+            g[i] = 0;
+            b[i] = 0;
             kol[i] = 0;
         }
 
